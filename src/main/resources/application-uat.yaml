@@ -1,0 +1,70 @@
+server:
+  servlet:
+    context-path: /chinalco
+    # 端口号
+  port: 18080
+
+#数据源
+spring:
+  datasource:
+    dynamic:
+      primary: master
+      strict: false
+      druid:
+        initial-size: 1
+        max-active: 200
+        min-idle: 1
+        max-wait: 60000
+      datasource:
+        master:
+          driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+          url: jdbc:sqlserver://47.98.159.160:14333;DatabaseName=master
+          username: sa
+          password: newgrand-2019
+        one:
+          driver-class-name: oracle.jdbc.OracleDriver
+          url: jdbc:oracle:thin:@192.168.0.227:1521/ORACLE
+          username:
+          password:
+  #swagger3.0 兼容问题
+  mvc:
+    path match:
+      matching-strategy: ANT_PATH_MATCHER
+
+#i8相关
+i8:
+  #外网ip地址或域名
+  url: http://127.0.0.1
+  #内网ip地址
+  ip: http://127.0.0.1
+  #接口专用账号
+  user: secdev
+  #接口专用账号密码
+  pwd:
+  #数据库账套号 （注意用双引号，0开头会被识别为数值，省略）
+  database: "0001"
+  #数据库连接串（用于请求i8提供的内部webservice）
+  dblink: ConnectType=ORACLEClient;Data Source=192.168.0.227:1521/ORACLE;UserId=NG0001;Password=zjsj123
+  #单点登录串
+  ssoUrl: http://localhost
+
+#http 请求相关
+http:
+  maxTotal: 800
+  defaultMaxPerRoute: 80
+  connectTimeout: 60000
+  connectionRequestTimeout: 300000
+  socketTimeout: 120000
+
+#定时任务schedule （corn表达式从左到右（用空格隔开）：秒 分 小时 月份 星期中的日期 年份）
+#例子 0 0/5 * * * ?    每隔 5 分钟运行
+corn: 0 0/5 * * * ?
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,100 @@
+spring:
+  profiles:
+    active: pro
+  task:
+    execution:
+      pool:
+        # 核心线程数
+        core-size: 8
+        # 最大线程数
+        max-size: 32
+        # 空闲线程存活时间
+        keep-alive: 60
+        # 是否允许核心线程超时
+        allow-core-thread-timeout: true
+        # 线程队列数量
+        queue-capacity: 200
+        shutdown:
+          # 线程关闭等待
+          await-termination: false
+          await-termination-period:
+          # 线程名称前缀
+      thread-name-prefix: ng-pool-
+  datasource:
+#    druid:
+#      # 初始化大小
+#      initial-size: 10
+#      # 最大连接数
+#      max-active: 100
+#      # 最小连接数
+#      min-idle: 5
+#      # 获取连接等待超时时间
+#      max-wait: 60000
+#      # 间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+#      time-between-eviction-runs-millis: 60000
+#      # 一个连接在池中最小生存的时间，单位是毫秒
+#      min-evictable-idle-time-millis: 300000
+#      # 用来检测连接是否有效的sql，要求是一个查询语句，常用select 'x'。如果validationQuery为null，testOnBorrow、testOnReturn、testWhileIdle都不会起作用。
+#      validation-query: "SELECT 1 FROM DUAL"
+#      # 建议配置为true，不影响性能，并且保证安全性。申请连接的时候检测，如果空闲时间大于timeBetweenEvictionRunsMillis，执行validationQuery检测连接是否有效
+#      test-while-idle: true
+#      # 申请连接时执行validationQuery检测连接是否有效，做了这个配置会降低性能 (默认false)
+#      test-on-borrow: false
+#      # 归还连接时执行validationQuery检测连接是否有效，做了这个配置会降低性能 (默认false)
+#      test-on-return: false
+#      # 是否缓存preparedStatement，也就是PSCache。PSCache对支持游标的数据库性能提升巨大，比如说oracle。在mysql下建议关闭。
+#      pool-prepared-statements: false
+#      # 要启用PSCache，必须配置大于0，当大于0时，poolPreparedStatements自动触发修改为true。在Druid中，不会存在Oracle下PSCache占用内存过多的问题，可以把这个数值配置大一些，比如说100
+#      max-pool-prepared-statement-per-connection-size: 100
+#      # 为监控开启SQL合并，将慢SQL的时间定为2毫秒，记录慢SQL日志
+#      connect-properties:
+#        druid.stat.mergeSql: true
+#        druid.stat.slowSqlMillis: 500
+#        # 配置多个英文逗号分隔
+#      filter: "stat,wall"
+
+server:
+  # 服务器的HTTP端口，默认为80
+  port: 18080
+  servlet:
+    # 应用的访问路径
+    context-path: /zhengfang
+  #tomcat
+  tomcat:
+    # Maximum number of connections that the server accepts and processes at any given time.\
+    max-connections: 0
+    # Maximum size, in bytes, of the HTTP message header.\
+    max-http-header-size: 0
+    # Maximum size, in bytes, of the HTTP post content.\
+    max-http-form-post-size: 0
+    # Maximum number of worker threads.\
+    max-threads: 0
+    # Minimum number of worker threads.
+    min-spare-threads: 0
+    # tomcat的URI编码
+    uri-encoding: UTF-8
+    # 连接数满后的排队数，默认为100
+    accept-count: 1000
+    threads:
+      # tomcat最大线程数，默认为200
+      max: 800
+      # Tomcat启动初始化的线程数，默认值10
+      min-spare: 100
+
+#时区（上海）
+TZ: Asia/Shanghai
+
+#mybatis-plus
+mybatis-plus:
+  #mapper 路径
+  mapper-locations: classpath*:mapper/*.xml
+  #mapper 实体对象扫描路径
+  type-aliases-package: com.newgrand.mapper
+  configuration:
+    #是否开启驼峰功能
+    map-underscore-to-camel-case: true
+    #null字段是否在结果集中返回
+    call-setters-on-nulls: true
+    #工厂拓展
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl #开启sql日志
+#    object-wrapper-factory: com.newgrand.config.MapWrapperFactory
