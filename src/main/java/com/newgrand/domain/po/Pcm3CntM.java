@@ -30,4 +30,7 @@ public class Pcm3CntM implements Serializable {
     @TableField("cnt_type")
     private String cntType;
 
+    @TableField("phid_pc")
+    private String phidPc;
+
 }

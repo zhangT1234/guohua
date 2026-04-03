@@ -69,7 +69,7 @@ public class BipReceivableServiceImpl implements BipReceivableService {
 
                 data.setBillDate(StringHelper.nullToEmpty(bill.get("bill_dt")));
                 data.setBustype("产值单");
-                data.setOrg(getPhIdHelper.GetValueByphid("fg_orglist", StringHelper.nullToEmpty(bill.get("phid_ocode")), "user_yyzzid"));
+                data.setOrg(getPhIdHelper.GetValueByphid("fg_orglist", StringHelper.nullToEmpty(bill.get("phid_ocode")), "user_ofsid"));
                 data.setObjectType("1");
                 data.setCustomer(getPhIdHelper.GetValueByphid("fg3_enterprise", StringHelper.nullToEmpty(bill.get("user_khmc")), "user_yyid").replace("C", "").replace("S", ""));
                 data.setEmployee(getPhIdHelper.GetValueByphid("hr_epm_main", StringHelper.nullToEmpty(bill.get("creator")), "user_bip_no"));
@@ -177,7 +177,7 @@ public class BipReceivableServiceImpl implements BipReceivableService {
                 // 交易类型编码
                 data.setBustype("产值单");
                 // 业务组织
-                data.setOrg(getPhIdHelper.GetValueByphid("fg_orglist", StringHelper.nullToEmpty(bill.get("ocode")), "user_yyzzid"));
+                data.setOrg(getPhIdHelper.GetValueByphid("fg_orglist", StringHelper.nullToEmpty(bill.get("ocode")), "user_ofsid"));
                 // 往来对象类型，1客户，2员工，3资金业务对象
                 data.setObjectType("1");
                 // 客户
@@ -302,7 +302,7 @@ public class BipReceivableServiceImpl implements BipReceivableService {
                 // 交易类型编码
                 data.setBustype("产值单");
                 // 业务组织
-                data.setOrg(getPhIdHelper.GetValueByphid("fg_orglist", StringHelper.nullToEmpty(bill.get("phid_ocode")), "user_yyzzid"));
+                data.setOrg(getPhIdHelper.GetValueByphid("fg_orglist", StringHelper.nullToEmpty(bill.get("phid_ocode")), "user_ofsid"));
                 // 往来对象类型，1客户，2员工，3资金业务对象
                 data.setObjectType("1");
                 // 客户
@@ -427,7 +427,7 @@ public class BipReceivableServiceImpl implements BipReceivableService {
                 // 交易类型编码
                 data.setBustype("合同结算");
                 // 业务组织
-                data.setOrg(getPhIdHelper.GetValueByphid("fg_orglist", StringHelper.nullToEmpty(bill.get("phid_ocode")), "user_yyzzid"));
+                data.setOrg(getPhIdHelper.GetValueByphid("fg_orglist", StringHelper.nullToEmpty(bill.get("phid_ocode")), "user_ofsid"));
                 // 往来对象类型，1客户，2员工，3资金业务对象
                 data.setObjectType("1");
                 // 客户
@@ -594,7 +594,7 @@ public class BipReceivableServiceImpl implements BipReceivableService {
                 // 交易类型编码
                 data.setBustype("合同结算");
                 // 业务组织
-                data.setOrg(getPhIdHelper.GetValueByphid("fg_orglist", StringHelper.nullToEmpty(bill.get("phid_ocode")), "user_yyzzid"));
+                data.setOrg(getPhIdHelper.GetValueByphid("fg_orglist", StringHelper.nullToEmpty(bill.get("phid_ocode")), "user_ofsid"));
                 // 往来对象类型，1客户，2员工，3资金业务对象
                 data.setObjectType("1");
                 // 客户

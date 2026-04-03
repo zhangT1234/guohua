@@ -1,7 +1,9 @@
 package com.newgrand.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.newgrand.domain.dto.OaResult;
 import com.newgrand.domain.dto.ProjectSyncRequest;
 import com.newgrand.domain.model.I8ReturnModel;
 import com.newgrand.domain.model.ProjectTableModel;
@@ -9,6 +11,7 @@ import com.newgrand.domain.po.FgOrglist;
 import com.newgrand.service.ProjectService;
 import com.newgrand.service.ProjectTableService;
 import com.newgrand.service.mp.FgOrglistService;
+import com.newgrand.utils.OaRequestUtil;
 import com.newgrand.utils.i8util.GetPhIdHelper;
 import com.newgrand.utils.i8util.I8Converter;
 import com.newgrand.utils.i8util.I8Request;
@@ -31,6 +34,8 @@ public class ProjectServiceImpl implements ProjectService {
     private final GetPhIdHelper getPhIdHelper;
     private final FgOrglistService fgOrglistService;
 
+    private final OaRequestUtil oaRequestUtil;
+
     private static final String dmMain = "{\"form\":{\"key\":\"PhId\",\"newRow\":{\"PcNo\":\"00000000000000202508001\",\"ProjectName\":\"新中大测试项目\",\"Ab\":\"\",\"Szfx\":\"1\",\"PhIdType\":\"215190319000002\",\"Stat\":\"sts\",\"StartDate\":\"2025-08-06\",\"EndDate\":\"2025-08-30\",\"CatPhId\":\"282190306000004\",\"ProjectManager\":\"\",\"LimitTime\":25,\"ApproxContractFc\":10,\"PhIdFiOcode\":\"282190306000004\",\"ProjectOrg\":\"418190308000014\",\"ManageMode\":\"0\",\"PhIdCompany\":\"108190318000006\",\"PhIdSgOrg\":\"108190318000006\",\"VirtualFlg\":\"4\",\"Descript\":\"\",\"GroupShare\":\"0\",\"PhIdScheme\":\"646190307000001\",\"user_bhzxm\":\"01\",\"user_yyid\":\"\",\"PhidBuildType\":\"\",\"NgRecordVer\":\"\",\"user_user_xmlx\":\"\",\"user_user_sfsj\":\"\",\"RecordManager\":\"\",\"ListFilterVal\":\"\",\"QueryField1Val\":\"\",\"QueryField2Val\":\"\",\"UIMultiConfigID\":\"\",\"RecordName\":\"新中大测试项目\",\"ManagerTel\":\"\",\"ShareOrg\":\"\",\"NGWriteSource\":\"\",\"Pc\":\"\",\"RiskFlag\":\"\",\"FactStartDt\":\"\",\"FactEndDt\":\"\",\"FactTime\":0,\"DutyOfficer\":\"\",\"ChkFlg\":\"0\",\"PhIdApp\":\"\",\"WfFlg\":\"0\",\"DaFlg\":\"0\",\"BillFlg\":\"1\",\"PhIdOri\":0,\"PhId\":\"0\",\"IsSynchronous\":0,\"Guid\":\"\",\"ImpInfo\":\"\",\"PhidSourceMId\":\"\",\"ItemResource\":\"\",\"Py\":\"XZDCSXM\",\"PointId\":\"\",\"Creator\":\"\",\"PhIdMultiCompany\":\"\",\"CatDept\":\"\",\"PhidTask\":\"\",\"OrgByProject\":\"0\",\"AsrFlg\":\"0\",\"CountryId\":\"1\",\"ProvinceId\":0,\"CityId\":0,\"RegionId\":0,\"ProjectAddress\":\"\",\"CurrType\":\"1\",\"CntAmtFc\":10,\"JobTax\":\"\",\"ManageArea\":\"\",\"JobPhone\":\"\",\"BuildingArea\":0,\"Msunit\":\"\",\"IsQuality\":\"\",\"IsSafety\":\"\",\"ProjectParentId\":\"\",\"CntNo\":\"\",\"ContractType\":\"\",\"ContractorDate\":\"\",\"ExchRate\":1,\"CntAmt\":10,\"IsClass\":\"\",\"PcClass\":\"\",\"BuildIsclass\":\"\",\"BuildClass\":\"\",\"ConRecorde\":\"\",\"WorkRecorde\":\"\",\"Deadline\":\"\",\"GSituation\":\"\",\"Longitude\":0,\"Latitude\":0,\"ImposeType\":\"2\",\"ImposeArea\":\"1\",\"PreImposeRate\":0,\"PermitDtB\":\"\",\"PhIdRatepayOcode\":\"\",\"PhIdTaxOcode\":\"\",\"IsWjz\":\"\",\"InvType\":\"\",\"InvAccount\":\"\",\"InvPassword\":\"\",\"IsRealEstate\":\"0\",\"LandPurchaseFund\":\"\",\"AbovegroundArea\":\"\",\"UndergroundArea\":\"\",\"ljkpje\":0,\"ljxxse\":0,\"ydkjx\":0,\"yjnzzs\":0,\"DecOrg\":\"\",\"PhIdTaxCenter\":\"\",\"Bank\":\"\",\"Bankaccount\":\"\",\"TaxRate\":0.03,\"CntBoqModel\":\"2\",\"BoqCtrlQuota\":\"2\",\"Boqtores\":\"0\",\"PhidYsfl\":\"\",\"IsToPn\":0,\"LbProjseries\":\"\",\"Tbmodel\":\"\",\"IsPcCostkz\":\"1\",\"UseDefaultPrc\":\"0\",\"RoleControl\":\"0\",\"ShowLeave\":\"0\",\"key\":\"0\"}}}";
     private static final String dmEmployee = "{\"table\":{\"key\":\"PhId\"}}";
     private static final String dmCorrect = "{\"table\":{\"key\":\"PhId\",\"newRow\":[{\"row\":{\"PhId\":\"\",\"Code\":\"01\",\"Pc\":\"\",\"TypeCode\":1,\"IsYsbreak\":\"\",\"NgRecordVer\":\"\",\"PcId\":\"\",\"PhidBsYs\":\"11\",\"PhidBsYs_EXName\":\"合同收入\",\"PhidBsYs_EXName_Flag\":\"1\",\"key\":null}},{\"row\":{\"PhId\":\"\",\"Code\":\"05\",\"Pc\":\"\",\"TypeCode\":2,\"IsYsbreak\":\"\",\"NgRecordVer\":\"\",\"PcId\":\"\",\"PhidBsYs\":\"100\",\"PhidBsYs_EXName\":\"投标预算\",\"PhidBsYs_EXName_Flag\":\"1\",\"key\":null}},{\"row\":{\"PhId\":\"\",\"Code\":\"06\",\"Pc\":\"\",\"TypeCode\":3,\"IsYsbreak\":\"\",\"NgRecordVer\":\"\",\"PcId\":\"\",\"PhidBsYs\":\"101\",\"PhidBsYs_EXName\":\"施工图预算\",\"PhidBsYs_EXName_Flag\":\"1\",\"key\":null}},{\"row\":{\"PhId\":\"\",\"Code\":\"02\",\"Pc\":\"\",\"TypeCode\":4,\"IsYsbreak\":\"\",\"NgRecordVer\":\"\",\"PcId\":\"\",\"PhidBsYs\":\"12\",\"PhidBsYs_EXName\":\"目标成本\",\"PhidBsYs_EXName_Flag\":\"1\",\"key\":null}},{\"row\":{\"PhId\":\"\",\"Code\":\"03\",\"Pc\":\"\",\"TypeCode\":5,\"IsYsbreak\":\"\",\"NgRecordVer\":\"\",\"PcId\":\"\",\"PhidBsYs\":\"13\",\"PhidBsYs_EXName\":\"责任成本\",\"PhidBsYs_EXName_Flag\":\"1\",\"key\":null}},{\"row\":{\"PhId\":\"\",\"Code\":\"04\",\"Pc\":\"\",\"TypeCode\":6,\"IsYsbreak\":\"\",\"NgRecordVer\":\"\",\"PcId\":\"\",\"PhidBsYs\":\"14\",\"PhidBsYs_EXName\":\"计划成本\",\"PhidBsYs_EXName_Flag\":\"1\",\"key\":null}},{\"row\":{\"PhId\":\"\",\"Code\":\"05\",\"Pc\":\"\",\"TypeCode\":7,\"IsYsbreak\":\"\",\"NgRecordVer\":\"\",\"PcId\":\"\",\"PhidBsYs\":\"363190507000001\",\"PhidBsYs_EXName\":\"计量导入\",\"PhidBsYs_EXName_Flag\":\"\",\"key\":null}},{\"row\":{\"PhId\":\"\",\"Code\":\"06\",\"Pc\":\"\",\"TypeCode\":8,\"IsYsbreak\":\"\",\"NgRecordVer\":\"\",\"PcId\":\"\",\"PhidBsYs\":\"312210127000001\",\"PhidBsYs_EXName\":\"月度目标成本\",\"PhidBsYs_EXName_Flag\":\"\",\"key\":null}}]},\"isChanged\":true}";
@@ -40,7 +45,7 @@ public class ProjectServiceImpl implements ProjectService {
         try {
             List<NameValuePair> params = new ArrayList<>();
             LambdaQueryWrapper<ProjectTableModel> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(ProjectTableModel::getUserYyid, data.getUser_yyid());
+           // queryWrapper.eq(ProjectTableModel::getUserYyid, data.getUser_yyid());
             List<ProjectTableModel> list = projectTableService.list(queryWrapper);
             if (list.isEmpty()) {
                 HashMap<String, Object> map = new HashMap<>();
@@ -58,7 +63,7 @@ public class ProjectServiceImpl implements ProjectService {
                 map.put("ApproxContractFc", data.getApproxContractFc());
 
                 LambdaQueryWrapper<FgOrglist> queryWrapper1 = new LambdaQueryWrapper<>();
-                queryWrapper1.eq(FgOrglist::getUserYyzzid, data.getCatPhIdEXName());
+                queryWrapper1.eq(FgOrglist::getUserOfsid, data.getCatPhIdEXName());
                 List<FgOrglist> list1 = fgOrglistService.list(queryWrapper1);
                 if (list1.isEmpty()) {
                     throw new RuntimeException("未找到对应的组织");
@@ -102,7 +107,7 @@ public class ProjectServiceImpl implements ProjectService {
                 //更新
                 LambdaUpdateWrapper<ProjectTableModel> updateWrapper = new LambdaUpdateWrapper<>();
                 LambdaQueryWrapper<FgOrglist> queryWrapper1 = new LambdaQueryWrapper<>();
-                queryWrapper1.eq(FgOrglist::getUserYyzzid, data.getCatPhIdEXName());
+                queryWrapper1.eq(FgOrglist::getUserOfsid, data.getCatPhIdEXName());
                 List<FgOrglist> list1 = fgOrglistService.list(queryWrapper1);
                 if (list1.isEmpty()) {
                     throw new RuntimeException("未找到对应的组织");
@@ -112,7 +117,7 @@ public class ProjectServiceImpl implements ProjectService {
                 String phidOcode = fgOrglist.getPhid();
 
                 String phidCompany = getPhIdHelper.GetPhIdByCode("fg3_enterprise", "user_yyid", "C" + data.getPhIdCompany());
-                updateWrapper.eq(ProjectTableModel::getUserYyid, data.getUser_yyid());
+               // updateWrapper.eq(ProjectTableModel::getUserYyid, data.getUser_yyid());
                 updateWrapper.set(ProjectTableModel::getPhidCompany, phidCompany)
                         .set(ProjectTableModel::getCatPhid, phidOcode)
                         .set(ProjectTableModel::getPhidFiOcode, phidOcode)
@@ -123,7 +128,7 @@ public class ProjectServiceImpl implements ProjectService {
                         .set(ProjectTableModel::getManageMode, data.getManageMode())
                         .set(ProjectTableModel::getStartDate, data.getStartDate())
                         .set(ProjectTableModel::getEndDate, data.getEndDate())
-                        .set(ProjectTableModel::getUserBhzxm, data.getUser_bhzxm())
+                       // .set(ProjectTableModel::getUserBhzxm, data.getUser_bhzxm())
                         .set(ProjectTableModel::getImposeType, data.getImposeType())
                         .set(ProjectTableModel::getCntAmtFc, data.getCntAmtFc())
                         .set(ProjectTableModel::getApproxContractFc, data.getApproxContractFc());
@@ -134,4 +139,53 @@ public class ProjectServiceImpl implements ProjectService {
             return I8ResultUtil.error("项目保存失败：" + ex.getMessage());
         }
     }
+
+    //向oa同步项目
+    @Override
+    public I8ReturnModel syncProj(String pcNo){
+       try {
+           LambdaQueryWrapper<ProjectTableModel> queryWrapper = new LambdaQueryWrapper<>();
+           queryWrapper.eq(ProjectTableModel::getPcNo, pcNo);
+           List<ProjectTableModel> list = projectTableService.list(queryWrapper);
+           if (CollectionUtil.isNotEmpty(list)) {
+               String body = "xmh=" + list.get(0).getPcNo() + "&xmmc=" + list.get(0).getProjectName();
+               OaResult oaResult = oaRequestUtil.sendPost("/api/toOa/receivedXm", body);
+               if ("0".equals(oaResult.getCode())) {
+                   return I8ResultUtil.success(oaResult.getMsg() != null ? oaResult.getMsg() : "项目同步更新成功", oaResult.getData());
+               } else {
+                   return I8ResultUtil.error(oaResult.getMsg() != null ? oaResult.getMsg() : "项目同步更新失败", oaResult.getData());
+               }
+           } else {
+               return I8ResultUtil.error("该项目编码不存在项目数据");
+           }
+       } catch (Exception ex) {
+           ex.printStackTrace();
+           return I8ResultUtil.error("项目同步失败：" + ex.getMessage());
+       }
+    }
+
+    //向oa同步项目
+    @Override
+    public I8ReturnModel syncProjById(Long phid){
+        try {
+            LambdaQueryWrapper<ProjectTableModel> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(ProjectTableModel::getPhid, phid);
+            List<ProjectTableModel> list = projectTableService.list(queryWrapper);
+            if (CollectionUtil.isNotEmpty(list)) {
+                String body = "xmh=" + list.get(0).getPcNo() + "&xmmc=" + list.get(0).getProjectName();
+                OaResult oaResult =  oaRequestUtil.sendPost("/api/toOa/receivedXm", body);
+                if ("0".equals(oaResult.getCode())) {
+                    return I8ResultUtil.success(oaResult.getMsg() != null ? oaResult.getMsg() : "项目同步更新成功", oaResult.getData());
+                } else {
+                    return I8ResultUtil.error(oaResult.getMsg() != null ? oaResult.getMsg() : "项目同步更新失败", oaResult.getData());
+                }
+            } else {
+                return I8ResultUtil.error("该phid不存在项目数据");
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return I8ResultUtil.error("项目同步失败：" + ex.getMessage());
+        }
+    }
+
 }

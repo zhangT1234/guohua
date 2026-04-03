@@ -1,6 +1,7 @@
 package com.newgrand.controller;
 
 import com.newgrand.domain.dto.CusSyncRequest;
+import com.newgrand.domain.dto.OaResult;
 import com.newgrand.domain.model.I8ReturnModel;
 import com.newgrand.service.CusService;
 import io.swagger.annotations.Api;
@@ -8,10 +9,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -30,4 +28,17 @@ public class CusController {
     I8ReturnModel saveData(@RequestBody @Valid CusSyncRequest data) {
         return cusService.saveData(data);
     }
+
+    @ApiOperation(value = "客商信息同步到oa", notes = "客商信息同步接口")
+    @RequestMapping(value = "/syncCus", method = RequestMethod.POST)
+    I8ReturnModel syncCus(@RequestParam("compNo") String compNo) {
+        return cusService.syncCus(compNo);
+    }
+
+    @ApiOperation(value = "客商信息同步到oa", notes = "客商信息同步接口")
+    @RequestMapping(value = "/syncCusById", method = RequestMethod.GET)
+    I8ReturnModel syncCusById(@RequestParam("phid") Long phid) {
+        return cusService.syncCusById(phid);
+    }
+
 }

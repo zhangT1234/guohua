@@ -41,9 +41,18 @@ public class Fg3Enterprise implements Serializable {
     @TableField("cardno")
     private String cardNo;
 
-    @TableField("user_yyid")
-    private String userYyid;
+    @TableField("user_ofsid")
+    private String userOfsid;
 
-    @TableField("user_yyid2")
-    private String userYyid2;
+    @TableField("phid")
+    private Long phid;
+
+    @TableField("fromtype")
+    private String fromtype;
+
+//    @TableField("user_yyid")
+//    private String userYyid;
+
+//    @TableField("user_yyid2")
+//    private String userYyid2;
 }

@@ -51,6 +51,9 @@ public class SSOController {
     @Value("${i8.url}")
     private String i8Url;
 
+    @Value("${i8.outip}")
+    private String i8outip;
+
     @Value("${i8.databaseName}")
     private String databaseName;
 
@@ -101,7 +104,7 @@ public class SSOController {
             } else {
                 userPwdStr = URLEncoder.encode(userPwdStr, "utf-8");
             }
-            String url = i8Url + "/Sup/NG3WebLogin/SignLogin?logid=" + logid + "&pwd=" + userPwdStr + "&database=" + database + "&orgid=" + orgid + "&openUrl=" + openUrl + "&urlTitle=" + urlTitle + "&openAlone=" + openAlone;
+            String url = i8outip + "/Sup/NG3WebLogin/SignLogin?logid=" + logid + "&pwd=" + userPwdStr + "&database=" + database + "&orgid=" + orgid + "&openUrl=" + openUrl + "&urlTitle=" + urlTitle + "&openAlone=" + openAlone;
             response.sendRedirect(url);
         }
     }

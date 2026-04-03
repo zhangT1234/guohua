@@ -30,13 +30,15 @@ public class OrgSyncRequest {
     @ApiModelProperty("归属组织")
     private String parentOrg;
 
-    @NotBlank(message = "用友组织id不能为空")
-    @ApiModelProperty(value = "用友组织id", required = true)
-    private String user_yyzzid;
+    @NotBlank(message = "第三方组织id不能为空")
+    @ApiModelProperty(value = "第三方组织id", required = true)
+    private String userOfsid;
 
     @ApiModelProperty(value = "负责人")
     private String empcode;
 
     @ApiModelProperty(value = "分管领导")
     private String otax;
+
+    private String userFwId;
 }

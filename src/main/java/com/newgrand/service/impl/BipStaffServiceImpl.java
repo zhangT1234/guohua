@@ -64,7 +64,7 @@ public class BipStaffServiceImpl implements BipStaffService {
                 List<BipJobDTO> mainJobList = new ArrayList<>();
                 List<BipJobDTO> ptJobList = new ArrayList<>();
                 List<Map<String, Object>> jobs = jdbcTemplate.queryForList(
-                        " select fo.user_yyzzid org_id,fo1.user_yyzzid dept_id,hes.* from hr_epm_station hes "
+                        " select fo.user_ofsid org_id,fo1.user_ofsid dept_id,hes.* from hr_epm_station hes "
                                 +"  left join fg_orglist fo on hes.cboo = fo.phid "
                                 +"  left join fg_orglist fo1 on hes.dept = fo1.phid "
                                 +"  where pphid = " + StringHelper.nullToEmpty(epm.get("phid"))

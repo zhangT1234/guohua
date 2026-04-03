@@ -1,13 +1,17 @@
 package com.newgrand.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.newgrand.domain.dto.CusSyncRequest;
+import com.newgrand.domain.dto.OaResult;
 import com.newgrand.domain.model.Fg3Enterprise;
 import com.newgrand.domain.model.I8ReturnModel;
+import com.newgrand.domain.po.FgOrglist;
 import com.newgrand.service.CusService;
 import com.newgrand.service.Fg3EnterpriseService;
 import com.newgrand.utils.NGEncodeUtil;
+import com.newgrand.utils.OaRequestUtil;
 import com.newgrand.utils.StringUtils;
 import com.newgrand.utils.i8util.I8Converter;
 import com.newgrand.utils.i8util.I8Request;
@@ -27,6 +31,8 @@ public class CusServiceImpl implements CusService {
     private final I8Request i8Request;
     private final Fg3EnterpriseService fg3EnterpriseService;
 
+    private final OaRequestUtil oaRequestUtil;
+
     private static final String entpriseformData = "{\"form\":{\"key\":\"PhId\",\"newRow\":{\"CompNo\":\"\",\"CompName\":\"\",\"PersonFlg\":0,\"SimpName\":\"\",\"SimpName2\":\"\",\"HelpCode\":\"\",\"OldName\":\"\",\"UnisocialCredit\":\"\",\"TaxNo\":\"\",\"CardType\":\"\",\"CardNo\":\"\",\"NationId\":1,\"ProvinceId\":\"\",\"CityId\":\"\",\"RegionId\":\"0\",\"TradeTypeId\":\"\",\"ParentCompId\":\"\",\"GroupShareFlg_tmp\":\"0\",\"Remarks\":\"\",\"IsBlackList_EXName\":\"\",\"IcChangeDt\":\"\",\"PhId\":\"\",\"AuditFlg\":\"\",\"AuditDt\":\"\",\"AuditPsnId\":\"\",\"FromType\":\"\",\"EstablishDate\":\"\",\"TaxPayerType\":\"\",\"TaxPayerName\":\"新中大测试客户\",\"TaxBankId\":\"\",\"TaxBankName\":\"\",\"TaxAccountNo\":\"\",\"TaxAddress\":\"\",\"TaxTelePhone\":\"\",\"RegMoney\":\"\",\"RegDt\":\"\",\"RegScope\":\"\",\"Person\":\"\",\"TradeGradeId\":\"\",\"EnterNatureId\":\"\",\"ScaleId\":\"\",\"Url\":\"\",\"Email\":\"\",\"IsTemp\":\"0\",\"IsInner\":\"0\",\"IsBlackList_tmp\":\"0\",\"IsBalance_tmp\":\"0\",\"IsDirect_tmp\":\"0\",\"IsDealer_tmp\":\"0\",\"CreateSupply_tmp\":\"0\",\"key\":\"\"}}}";
     private static final String customfileformData = "{\"form\":{\"key\":\"PhId\",\"newRow\":{\"SourceId\":\"\",\"CustClassId\":\"1000\",\"CustomRankId\":\"\",\"ImportDegreeId\":\"\",\"DeptId\":\"\",\"EmpId\":\"\",\"OrgId\":\"282190306000004\",\"Creator\":\"418190308000002\",\"NgInsertDt\":\"\",\"Accstop\":\"\",\"AccstopBDt\":\"\",\"AccstopEndDt\":\"\",\"ChannelTypeId\":\"\",\"ChannelRankId\":\"\",\"GfiCboo\":\"\",\"AuditFlg\":\"\",\"BranchType\":\"\",\"BranchProvince\":\"\",\"BranchCity\":\"\",\"EntId\":\"\",\"AuditDt\":\"\",\"AuditPsnId\":\"\",\"PhIdScheme\":\"\",\"ImpInfo\":\"\",\"ResourceTable\":\"\",\"PhIdResource\":\"\",\"PhId\":\"\",\"NgRecordVer\":\"\",\"CustomAttr\":\"\",\"GroupShareFlg\":\"0\",\"IsBalance\":\"0\",\"IsDirect\":\"0\",\"IsDealer\":\"0\",\"CreateSupply\":\"0\",\"IsBlackList\":\"0\",\"VaryStatus\":\"\",\"WfFlag\":\"\",\"key\":\"\"}}}";
     private static final String customsettleinfoData = "{\"form\":{\"key\":\"PhId\",\"newRow\":{\"BilltoId\":\"\",\"PayWayId\":\"\",\"FcId\":\"1\",\"BankId\":\"\",\"AccountNo\":\"\",\"DiscType\":\"\",\"DiscRate\":\"\",\"AccountName\":\"\",\"ProvinceId\":\"\",\"CityId\":\"\",\"RegionId\":\"\",\"FinTypeId\":\"\",\"CtaxRate\":\"\",\"GatherDays\":\"\",\"Rate\":\"\",\"CreditRankId\":\"\",\"CreditDays\":\"\",\"CreditNum\":\"\",\"IsConCredit\":\"0\",\"InvoiceTypeId\":\"\",\"PrerecAcctId\":\"\",\"RecAcctId\":\"\",\"SaleAcctId\":\"\",\"InAcctId\":\"\",\"PhId\":\"\",\"key\":\"\"}}}";
@@ -45,7 +51,7 @@ public class CusServiceImpl implements CusService {
                 }
             }
             LambdaQueryWrapper<Fg3Enterprise> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(Fg3Enterprise::getUserYyid, "C" + data.getUser_yyid());
+     //       queryWrapper.eq(Fg3Enterprise::getUserYyid, "C" + data.getUser_yyid());
             if("1".equals(data.getPersonFlg())) {
                 queryWrapper.or().eq(Fg3Enterprise::getCardNo, data.getCardNo());
             }
@@ -104,19 +110,19 @@ public class CusServiceImpl implements CusService {
             } else {
                 //更新
                 LambdaUpdateWrapper<Fg3Enterprise> updateWrapper = new LambdaUpdateWrapper<>();
-                updateWrapper.eq(Fg3Enterprise::getUserYyid, "C" + data.getUser_yyid());
+            //    updateWrapper.eq(Fg3Enterprise::getUserYyid, "C" + data.getUser_yyid());
                 if("1".equals(data.getPersonFlg())) {
                     updateWrapper.or().eq(Fg3Enterprise::getCardNo, data.getCardNo());
                 }
                 if(!"1".equals(data.getPersonFlg()) && !"4".equals(data.getPersonFlg())) {
                     updateWrapper.or().eq(Fg3Enterprise::getUnisocialCredit, data.getUnisocialCredit());
                 }
-                updateWrapper.set(Fg3Enterprise::getUserYyid, "C" + data.getUser_yyid())
-                        .set(Fg3Enterprise::getCompName, data.getCompName())
-                        .set(Fg3Enterprise::getUnisocialCredit, data.getUnisocialCredit())
-                        .set(Fg3Enterprise::getPersonFlg, data.getPersonFlg())
-                        .set(Fg3Enterprise::getCardType, data.getCardType())
-                        .set(Fg3Enterprise::getCardNo, data.getCardNo());
+          //      updateWrapper.set(Fg3Enterprise::getUserYyid, "C" + data.getUser_yyid())
+          //              .set(Fg3Enterprise::getCompName, data.getCompName())
+          //              .set(Fg3Enterprise::getUnisocialCredit, data.getUnisocialCredit())
+           //             .set(Fg3Enterprise::getPersonFlg, data.getPersonFlg())
+           //             .set(Fg3Enterprise::getCardType, data.getCardType())
+           //             .set(Fg3Enterprise::getCardNo, data.getCardNo());
                 boolean update = fg3EnterpriseService.update(updateWrapper);
                 if (update) {
                     return I8ResultUtil.success("客户-" + data.getCompNo() + "，" + data.getCompName() + "，保存成功！");
@@ -129,4 +135,83 @@ public class CusServiceImpl implements CusService {
             return I8ResultUtil.error("客户保存失败：" + ex.getMessage());
         }
     }
+
+    @Override
+    public I8ReturnModel syncCus(String compNo){
+        try {
+            LambdaQueryWrapper<Fg3Enterprise> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(Fg3Enterprise::getCompNo, compNo);
+            List<Fg3Enterprise> list = fg3EnterpriseService.list(queryWrapper);
+            if (CollectionUtil.isNotEmpty(list)) {
+                if (org.apache.commons.lang3.StringUtils.isNotEmpty(list.get(0).getUserOfsid())) {
+                    //修改
+                    String body = "bh=" + list.get(0).getUserOfsid() + "&mc=" + list.get(0).getCompName() + "&sh=" + list.get(0).getUnisocialCredit();
+                    OaResult oaResult =  oaRequestUtil.sendPost("/api/toOa/receivedKs", body);
+                    if ("0".equals(oaResult.getCode())) {
+                        return I8ResultUtil.success(oaResult.getMsg() != null ? oaResult.getMsg() : "客商同步更新成功", oaResult.getData());
+                    } else {
+                        return I8ResultUtil.error(oaResult.getMsg() != null ? oaResult.getMsg() : "客商同步更新失败", oaResult.getData());
+                    }
+                } else {
+                    //新增
+                    String body = "mc=" + list.get(0).getCompName() + "&sh=" + list.get(0).getUnisocialCredit();
+                    OaResult oaResult = oaRequestUtil.sendPost("/api/toOa/receivedKs", body);
+                    if ("0".equals(oaResult.getCode())) {
+                        LambdaUpdateWrapper<Fg3Enterprise> updateWrapper = new LambdaUpdateWrapper<>();
+                        updateWrapper.eq(Fg3Enterprise::getCompNo, compNo)
+                            .set(Fg3Enterprise::getUserOfsid, oaResult.getData());
+                        fg3EnterpriseService.update(updateWrapper);
+                        return I8ResultUtil.success(oaResult.getMsg()!=null?oaResult.getMsg():"客商同步更新成功", oaResult.getData());
+                    } else {
+                        return I8ResultUtil.error(oaResult.getMsg()!=null?oaResult.getMsg():"客商同步更新失败", oaResult.getData());
+                    }
+                }
+            } else {
+                return I8ResultUtil.error("该编码不存在客商数据");
+            }
+        }catch (Exception ex) {
+            ex.printStackTrace();
+            return I8ResultUtil.error("客商同步失败：" + ex.getMessage());
+        }
+    }
+
+    @Override
+    public I8ReturnModel syncCusById(Long phid){
+        try {
+            LambdaQueryWrapper<Fg3Enterprise> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(Fg3Enterprise::getPhid, phid);
+            List<Fg3Enterprise> list = fg3EnterpriseService.list(queryWrapper);
+            if (CollectionUtil.isNotEmpty(list)) {
+                if (org.apache.commons.lang3.StringUtils.isNotEmpty(list.get(0).getUserOfsid())) {
+                    //修改
+                    String body = "bh=" + list.get(0).getUserOfsid() + "&mc=" + list.get(0).getCompName() + "&sh=" + list.get(0).getUnisocialCredit();
+                    OaResult oaResult = oaRequestUtil.sendPost("/api/toOa/receivedKs", body);
+                    if ("0".equals(oaResult.getCode())) {
+                        return I8ResultUtil.success(oaResult.getMsg() != null ? oaResult.getMsg() : "客商同步更新成功", oaResult.getData());
+                    } else {
+                        return I8ResultUtil.error(oaResult.getMsg() != null ? oaResult.getMsg() : "客商同步更新失败", oaResult.getData());
+                    }
+                } else {
+                    //新增
+                    String body = "mc=" + list.get(0).getCompName() + "&sh=" + list.get(0).getUnisocialCredit();
+                    OaResult oaResult = oaRequestUtil.sendPost("/api/toOa/receivedKs", body);
+                    if ("0".equals(oaResult.getCode())) {
+                        LambdaUpdateWrapper<Fg3Enterprise> updateWrapper = new LambdaUpdateWrapper<>();
+                        updateWrapper.eq(Fg3Enterprise::getPhid, phid)
+                                .set(Fg3Enterprise::getUserOfsid, oaResult.getData());
+                        fg3EnterpriseService.update(updateWrapper);
+                        return I8ResultUtil.success(oaResult.getMsg() != null ? oaResult.getMsg() : "客商同步更新成功", oaResult.getData());
+                    } else {
+                        return I8ResultUtil.error(oaResult.getMsg() != null ? oaResult.getMsg() : "客商同步更新失败", oaResult.getData());
+                    }
+                }
+            } else {
+                return I8ResultUtil.error("该phid不存在客商数据");
+            }
+        }catch (Exception ex) {
+            ex.printStackTrace();
+            return I8ResultUtil.error("客商同步失败：" + ex.getMessage());
+        }
+    }
+
 }

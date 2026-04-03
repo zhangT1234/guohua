@@ -83,7 +83,7 @@ public class BipPayableServiceImpl implements BipPayableService {
                 // 交易类型编码
                 data.setBustype("支出结算单");
                 // 业务组织
-                data.setOrg(getPhIdHelper.GetValueByphid("fg_orglist", StringHelper.nullToEmpty(bill.get("phid_ocode")), "user_yyzzid"));
+                data.setOrg(getPhIdHelper.GetValueByphid("fg_orglist", StringHelper.nullToEmpty(bill.get("phid_ocode")), "user_ofsid"));
                 // 往来对象类型，0供应商，1客户，2员工，3资金业务对象
                 data.setObjectType("0");
                 // 供应商
@@ -234,7 +234,7 @@ public class BipPayableServiceImpl implements BipPayableService {
                 // 交易类型编码
                 data.setBustype("盘点单");
                 // 业务组织
-                data.setOrg(getPhIdHelper.GetValueByphid("fg_orglist", StringHelper.nullToEmpty(bill.get("ocode")), "user_yyzzid"));
+                data.setOrg(getPhIdHelper.GetValueByphid("fg_orglist", StringHelper.nullToEmpty(bill.get("ocode")), "user_ofsid"));
                 // 往来对象类型，0供应商，1客户，2员工，3资金业务对象
                 data.setObjectType("2");
                 // 供应商

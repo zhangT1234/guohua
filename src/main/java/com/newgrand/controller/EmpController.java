@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @Author: zhanglixin
@@ -28,8 +29,14 @@ public class EmpController {
     private EmpService empService;
 
     @ApiOperation(value = "人员保存接口", notes = "人员保存接口")
-    @RequestMapping(value = "/saveEmp", method = RequestMethod.POST)
+    @RequestMapping(value = "/saveEmp1", method = RequestMethod.POST)
     I8ReturnModel saveEmp(@RequestBody EmpModel data) {
         return empService.saveEmp(data);
+    }
+
+    @ApiOperation(value = "人员批量保存接口", notes = "人员批量保存接口")
+    @RequestMapping(value = "/saveEmp", method = RequestMethod.POST)
+    I8ReturnModel saveEmpList(@RequestBody List<EmpModel> list) {
+        return empService.saveEmpList(list);
     }
 }

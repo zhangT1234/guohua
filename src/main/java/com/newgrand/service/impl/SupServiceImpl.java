@@ -46,7 +46,7 @@ public class SupServiceImpl implements SupService {
                 }
             }
             LambdaQueryWrapper<Fg3Enterprise> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(Fg3Enterprise::getUserYyid, "S" + data.getUser_yyid());
+           // queryWrapper.eq(Fg3Enterprise::getUserYyid, "S" + data.getUser_yyid());
             if("1".equals(data.getPersonFlg())) {
                 queryWrapper.or().eq(Fg3Enterprise::getCardNo, data.getCardNo());
             }
@@ -111,7 +111,7 @@ public class SupServiceImpl implements SupService {
             } else {
                 //更新供应商信息
                 LambdaUpdateWrapper<Fg3Enterprise> updateWrapper = new LambdaUpdateWrapper<>();
-                updateWrapper.eq(Fg3Enterprise::getUserYyid2, "S" + data.getUser_yyid());
+              //  updateWrapper.eq(Fg3Enterprise::getUserYyid2, "S" + data.getUser_yyid());
                 if("1".equals(data.getPersonFlg())) {
                     updateWrapper.or().eq(Fg3Enterprise::getCardNo, data.getCardNo());
                 }
@@ -119,7 +119,7 @@ public class SupServiceImpl implements SupService {
                     updateWrapper.or().eq(Fg3Enterprise::getUnisocialCredit, data.getUnisocialCredit());
                 }
                 updateWrapper.set(Fg3Enterprise::getCompName, data.getCompName())
-                        .set(Fg3Enterprise::getUserYyid2, "S" + data.getUser_yyid())
+                   //     .set(Fg3Enterprise::getUserYyid2, "S" + data.getUser_yyid())
                         .set(Fg3Enterprise::getPersonFlg, data.getPersonFlg())
                         .set(Fg3Enterprise::getCardType, data.getCardType())
                         .set(Fg3Enterprise::getCardNo, data.getCardNo())

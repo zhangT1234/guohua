@@ -11,7 +11,9 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @Data
@@ -56,4 +58,12 @@ public class ExecutorConfig {
         executor.initialize();
         return executor;
     }
+
+    @Bean
+    public ThreadPoolExecutor threadPoolExecutor(){
+        ThreadPoolExecutor pool = new ThreadPoolExecutor(100, 800,
+                30L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(500));
+        return pool;
+    }
+
 }

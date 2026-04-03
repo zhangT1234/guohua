@@ -49,8 +49,8 @@ public class ProjectTableModel {
     @TableField("phid_sg_org")
     private String phidSgOrg;
 
-    @TableField("user_bhzxm")
-    private String userBhzxm;
+//    @TableField("user_bhzxm")
+//    private String userBhzxm;
 
     @TableField("imposetype")
     private String imposeType;
@@ -64,12 +64,15 @@ public class ProjectTableModel {
     @TableField("cnt_amt_fc")
     private String cntAmtFc;
 
-    @TableField("user_yyid")
-    private String userYyid;
+//    @TableField("user_yyid")
+//    private String userYyid;
 
     @TableField("phid_fi_ocode")
     private String phidFiOcode;
 
     @TableField("project_org")
     private String projectOrg;
+
+    @TableField("phid")
+    private String phid;
 }

@@ -45,16 +45,19 @@ public class FgOrglist implements Serializable {
     @TableField("orgtype")
     private String orgtype;
 
-    @TableField("ng_update_dt")
-    private String ngUpdateDt;
+//    @TableField("ng_update_dt")
+//    private String ngUpdateDt;
 
-    @TableField("user_yyzzid")
-    private String userYyzzid;
+    @TableField("user_ofsid")
+    private String userOfsid;
 
     @TableField("empcode")
     private String empcode;
 
     @TableField("otax")
     private String otax;
+
+    @TableField("user_fw_id")
+    private String userFwId;
 
 }

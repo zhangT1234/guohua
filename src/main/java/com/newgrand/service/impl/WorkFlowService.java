@@ -19,6 +19,7 @@ import com.newgrand.mapper.ActHiTaskinstMapper;
 import com.newgrand.mapper.Fg3UserMapper;
 import com.newgrand.mapper.SecDevTaskMsgMapper;
 import com.newgrand.utils.i8util.StringHelper;
+import com.newgrand.utils.security.AESUtil;
 import com.newgrand.utils.uuid.GetNewPhidUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.http.Header;
@@ -34,6 +35,8 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -54,6 +57,9 @@ public class WorkFlowService {
 
     @Value("${i8.url}")
     private String i8Url;
+
+    @Value("${i8.outUrl}")
+    private String i8outUrl;
 
     @Value("${i8.currenturl}")
     private String currentUrl;
@@ -92,8 +98,9 @@ public class WorkFlowService {
 
     public I8ReturnModel Send(String jsonStr) throws Exception {
         I8ReturnModel rv = new I8ReturnModel();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.SSS][.SS][.S]");
         try {
-//            dbLog.info("taskmsg", "产品推送", jsonStr);
+            dbLog.info("taskmsg", "产品推送", jsonStr);
             //先将接收到的数据插入中间表 AddNew 状态的数据
             JSONArray workflowJA = JSON.parseArray(jsonStr);
             int wfCount = workflowJA.size();
@@ -103,7 +110,7 @@ public class WorkFlowService {
                 String title = wf.getString("title");
                 String url = wf.getString("url");
                 String dbName = wf.getString("dbName");
-                if (!i8DbName.equals(dbName)) continue; //非当前启用账套
+                if (!"NG0001".equals(dbName)) continue; //非当前启用账套
                 String currentUser = wf.getString("currentUser");
                 String status = wf.getString("status");
                 if (!"addNew".equals(status)) continue; //只记录AddNew数据
@@ -134,12 +141,13 @@ public class WorkFlowService {
                 String title = wf.getString("title");
                 String url = wf.getString("url");
                 String dbName = wf.getString("dbName");
-                if (!i8DbName.equals(dbName)) continue; //非当前启用账套
+                if (!"NG0001".equals(dbName)) continue; //非当前启用账套
                 String currentUser = wf.getString("currentUser");
                 String status = wf.getString("status");
                 JSONArray usersJA = wf.getJSONArray("users");
                 int userCount = usersJA.size();
-                SimpleDateFormat bartDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                DateTimeFormatter bartDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                SimpleDateFormat bartDateFormat1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 if ("addNew".equals(status)) {
                     //新增待办
                     List<Map<String, Object>> wfInfo = jdbcTemplate.queryForList(
@@ -152,14 +160,17 @@ public class WorkFlowService {
                                     "Join ACT_NG_BIZCOMPONENT anbcp on anbcp.componentid=t.form_resource_key_\n" +
                                     "Join act_ng_bizinfo anbi on anbi.Bizid=anbcp.bizid\n" +
                                     "WHERE t.ID_=?", taskid);
-                    if (wfInfo.size() > 0) {
+                    if (wfInfo != null && wfInfo.size() > 0) {
                         Map<String, Object> workFlow = wfInfo.get(0);
                         String insid = StringHelper.nullToEmpty(workFlow.get("insid"));//流程id
                         String workflowname = StringHelper.nullToEmpty(workFlow.get("workflowname"));//流程类型名称
                         String nodename = StringHelper.nullToEmpty(workFlow.get("nodename"));//步骤名称(节点名称)
                         String creatorphid = StringHelper.nullToEmpty(workFlow.get("creatorphid"));//创建人phid
-                        String createdatetime = bartDateFormat.format(wfInfo.get(0).get("createdatetime"));
-                        String receivedatetime = bartDateFormat.format(wfInfo.get(0).get("receivedatetime"));
+
+                        LocalDateTime dateTime1 = LocalDateTime.parse(wfInfo.get(0).get("createdatetime").toString(), formatter);
+                        LocalDateTime dateTime2 = LocalDateTime.parse(wfInfo.get(0).get("receivedatetime").toString(), formatter);
+                        String createdatetime = dateTime1.format(bartDateFormat);
+                        String receivedatetime = dateTime2.format(bartDateFormat);
                         for (int m = 0; m < userCount; m++) {
                             String userid = usersJA.getString(m);//接收人phid
                             JSONObject root_push = new JSONObject();
@@ -168,13 +179,18 @@ public class WorkFlowService {
                             String receiver = receiverInfo.getUserno();
                             String creator = creatorInfo.getUserno();
 
-                            root_push.put("title", title);//消息标题
-                            root_push.put("content", "");//消息内容
-                            root_push.put("businessKey", taskid + "_" + userid);
-                            root_push.put("commitUserId", creator);
-                            root_push.put("yyUserIds", Arrays.asList(receiver));//第三方系统接收人主键
-                            root_push.put("buttonDisplay", 0);
-
+                            root_push.put("syscode", registerCode);//注册系统编码
+                            root_push.put("flowid", taskid);//
+                            root_push.put("requestname", title);//待办标题
+                            root_push.put("workflowname", workflowname);//
+                            root_push.put("nodename", nodename);//
+                            root_push.put("isremark", "0");//流程处理状态 0：待办 2：已办 4：办结
+                            root_push.put("viewtype", "0");//流程查看状态 0：未读 1：已读;
+                            root_push.put("creator", creator);//
+                            root_push.put("createdatetime", createdatetime);//
+                            root_push.put("receiver", receiver);//
+                            root_push.put("receivedatetime", receivedatetime);//
+                            root_push.put("receivets", System.currentTimeMillis() + "");//
                             //组装PCurl链接地址
                             String pwd = StringHelper.nullToEmpty(receiverInfo.getPwd());
                             String org = receiverInfo.getLastloginorg();
@@ -183,9 +199,9 @@ public class WorkFlowService {
                             }//统一去掉第一个斜杠
                             String base64openUrl = URLEncoder.encode(url, "UTF-8");
                             //Sup/NG3WebLogin/SignLogin
-                            String pcurl = currentUrl + "/zhengfang/SSO/wfmsg?logid=" + receiver + "&database=" + i8DbName + "&orgid=" + org + "&openUrl=" + base64openUrl + "&urlTitle=" + URLEncoder.encode(title, "UTF-8") + "&openAlone=true";
-
-                            root_push.put("webUrl", pcurl);//PC穿透地址
+                            String pcurl = i8outUrl + "/guohua/SSO/wfmsg?logid=" + receiver + "&database=" + i8DbName + "&orgid=" + org + "&openUrl=" + base64openUrl + "&urlTitle=" + URLEncoder.encode(title, "UTF-8") + "&openAlone=true";
+                            pcurl = AESUtil.aesEncrypt(pcurl);
+                            root_push.put("pcurl", pcurl);//PC穿透地址
                             //组装app链接地址
                             JSONObject pushdata = new JSONObject();
                             JSONObject pushdatadata = new JSONObject();
@@ -193,93 +209,190 @@ public class WorkFlowService {
                             pushdatadata.put("taskinstid", taskid);
                             pushdata.put("data", pushdatadata);
                             String pushdd = URLEncoder.encode(pushdata.toJSONString(), "UTF-8");
-                            String appurl = i8App + "&requestType=MEA&userid=" + receiver + "_" + i8DbName.replace("NG", "") + "&pushdata=" + pushdd;
-                            root_push.put("mUrl", appurl);//H5穿透地址
+                            String appurl = i8App + "&requestType=MEA&userid=" + receiver + "_" + i8DbName.replace("ng", "") + "&pushdata=" + pushdd;
+                            appurl = AESUtil.aesEncrypt(appurl);
+                            root_push.put("appurl", appurl);//H5穿透地址
 
-                            BipResult resultData = bipRequestUtil.sendPost("/iuap-api-gateway/vh8c6ypa/current_yonbip_default_sys/kekai/todo/push", JSONObject.toJSONString(root_push));
-
-
-//                            dbLog.info("addNew", "推送新增待办", "推送:" + root_push.toJSONString() + "接口返回:" + resultData.toString());
-                            int j = 0;//{"return":{"returnState":2,"message":"消息入队成功 | 4bd2a885-6af5-4c7c-91f7-89645046c17b"}}
+                            JSONArray jsonArray = new JSONArray();
+                            jsonArray.add(root_push);
+                            StringEntity entity = new StringEntity(jsonArray.toString(), Charset.forName("UTF-8"));
+                            entity.setContentType("application/json");
+                            Header[] headers = new Header[1];
+                            Header header = new BasicHeader("Content-Type", "application/json");
+                            headers[0] = header;
+                            String addNewUrl = oaUrl + "/api/flow/receive";
+                            String rtnMsg = httpHelper.Post(addNewUrl, entity, headers);
+                            dbLog.info("addNew", "推送新增待办", addNewUrl + "推送:" + jsonArray.toString() + "接口返回:" + rtnMsg);
                             //更新新增待办推送标识和时间
-                            if ("200".equals(resultData.getCode())) {
+                            JSONObject joRtn = JSONObject.parseObject(rtnMsg);
+                            if ("success".equals(joRtn.getString("result"))) {
                                 Date nowTime = new Date();
-                                LambdaUpdateWrapper<SecDevTaskMsg> updateWrapper = new LambdaUpdateWrapper<>();
-                                updateWrapper.eq(SecDevTaskMsg::getTaskid, taskid);
-                                updateWrapper.eq(SecDevTaskMsg::getUserid, userid);
-                                updateWrapper.set(SecDevTaskMsg::getPushadd, "1");
-                                updateWrapper.set(SecDevTaskMsg::getPushaddtime, bartDateFormat.format(nowTime));
+                                UpdateWrapper updateWrapper = new UpdateWrapper();
+                                updateWrapper.eq("taskid", taskid);
+                                updateWrapper.eq("userid", userid);
+                                updateWrapper.set("pushadd", "1");
+                                updateWrapper.set("pushaddtime", bartDateFormat1.format(nowTime));
                                 secDevTaskMsgMapper.update(null, updateWrapper);
+                            } else {
+                                if (joRtn.getString("message").contains("不存在")) {
+                                    Date nowTime = new Date();
+                                    UpdateWrapper updateWrapper = new UpdateWrapper();
+                                    updateWrapper.eq("taskid", taskid);
+                                    updateWrapper.eq("userid", userid);
+                                    updateWrapper.set("pushadd", "1");
+                                    updateWrapper.set("pushaddtime", bartDateFormat1.format(nowTime));
+                                    secDevTaskMsgMapper.update(null, updateWrapper);
+                                }
                             }
                         }
                     }
-                } else if ("done".equals(status)) {
-                    //已办
-                    String instID = url.substring(url.indexOf("wfpiid=") + 7, url.indexOf("&wftaskid="));
-                    List<Map<String, Object>> billInfoMap = jdbcTemplate.queryForList("SELECT anb.BIZNAME as modelName FROM ACT_HI_PROCINST ahp\n" +
-                            "LEFT JOIN act_ng_processtrace anp ON ahp.ID_=anp.INSTCODE\n" +
-                            "LEFT JOIN act_ng_bizinfo anb ON anb.BIZID=anp.BIZID\n" +
-                            "WHERE ahp.ID_=?", instID);
-                    String modelName = "";
-                    if (billInfoMap.size() > 0) {
-                        Map<String, Object> bill = billInfoMap.get(0);
-                        //查询模块名称
-                        modelName = StringHelper.nullToEmpty(bill.get("modelName"));
-                    }
-                    for (int m = 0; m < userCount; m++) {
-                        String userid = usersJA.getString(m);//接收人phid
-                        Fg3User receiverInfo = fg3UserMapper.selectById(userid);
-                        JSONObject root_push = new JSONObject();
-                        root_push.put("businessKey", taskid + "_" + userid);//第三方系统待办主键
-                        root_push.put("yyUserId", receiverInfo.getUserno());
-
-                        BipResult resultData = bipRequestUtil.sendPost("/iuap-api-gateway/vh8c6ypa/current_yonbip_default_sys/kekai/todo/push/done", JSONObject.toJSONString(root_push));
-
-                        int j = 0;
-//                        dbLog.info("done", "推送已办", "推送:" + root_push.toJSONString() + "接口返回:" + resultData.toString());
-                        //更新待办已办推送标识和时间
-                        if ("200".equals(resultData.getCode())) {
-                            Date nowTime = new Date();
-                            LambdaUpdateWrapper<SecDevTaskMsg> updateWrapper = new LambdaUpdateWrapper<>();
-                            updateWrapper.eq(SecDevTaskMsg::getTaskid, taskid);
-                            updateWrapper.eq(SecDevTaskMsg::getUserid, userid);
-                            updateWrapper.set(SecDevTaskMsg::getPushdone, "1");
-                            updateWrapper.set(SecDevTaskMsg::getPushdonetime, bartDateFormat.format(nowTime));
-                            secDevTaskMsgMapper.update(null, updateWrapper);
-                        }
-                    }
-                } else if ("delete".equals(status)) {
-                    //删除待办
-                    for (int m = 0; m < userCount; m++) {
-                        String userid = usersJA.getString(m);//接收人phid
-                        JSONObject root_push = new JSONObject();
-                        root_push.put("businessKey", taskid + "_" + userid);//第三方系统待办主键
-
-                        Fg3User receiverInfo = fg3UserMapper.selectById(userid);
-                        root_push.put("yyUserId", receiverInfo.getUserno());
-
-                        BipResult resultData = bipRequestUtil.sendPost("/iuap-api-gateway/vh8c6ypa/current_yonbip_default_sys/kekai/todo/push/revocation", JSONObject.toJSONString(root_push));
-
-                        int j = 0;
-//                        dbLog.info("delete", "推送删除待办",  "推送:" + root_push.toJSONString() + "接口返回:" + resultData.toString());
-                        //更新删除待办推送标识和时间
-                        if ("200".equals(resultData.getCode())) {
-                            Date nowTime = new Date();
-                            LambdaUpdateWrapper<SecDevTaskMsg> updateWrapper = new LambdaUpdateWrapper<>();
-                            updateWrapper.eq(SecDevTaskMsg::getTaskid, taskid);
-                            updateWrapper.eq(SecDevTaskMsg::getUserid, userid);
-                            updateWrapper.set(SecDevTaskMsg::getPushdel, "1");
-                            updateWrapper.set(SecDevTaskMsg::getPushdeltime, bartDateFormat.format(nowTime));
-                            secDevTaskMsgMapper.update(null, updateWrapper);
-                        }
-
-
-                    }
                 }
+//                else if ("done".equals(status)) {
+//                    Thread.sleep(1000*60*2);
+//                    //已办
+//                    List<Map<String, Object>> wfInfo = jdbcTemplate.queryForList(
+//                            "SELECT p.id_ insid,t.NAME_ as nodename,t.START_TIME_ receivedatetime,p.START_TIME_ createdatetime,\n" +
+//                                    "u1.phid as creatorphid,u1.userno startuserno,pd.NAME_ pdname,p.BUSINESS_KEY_ keyname,anbi.bizname as workflowname\n" +
+//                                    "FROM ACT_HI_TASKINST t\n" +
+//                                    "JOIN ACT_HI_PROCINST p ON t.PROC_INST_ID_ =p.ID_\n" +
+//                                    "JOIN fg3_user u1 ON u1.phid =p.START_USER_ID_ \n" +
+//                                    "JOIN ACT_RE_PROCDEF pd ON pd.ID_ =p.PROC_DEF_ID_\n" +
+//                                    "Join ACT_NG_BIZCOMPONENT anbcp on anbcp.componentid=t.form_resource_key_\n" +
+//                                    "Join act_ng_bizinfo anbi on anbi.Bizid=anbcp.bizid\n" +
+//                                    "WHERE t.ID_=?", taskid);
+//                    if (wfInfo != null && wfInfo.size() > 0) {
+//                        Map<String, Object> workFlow = wfInfo.get(0);
+//                        String insid = StringHelper.nullToEmpty(workFlow.get("insid"));//流程id
+//                        String workflowname = StringHelper.nullToEmpty(workFlow.get("workflowname"));//流程类型名称
+//                        String nodename = StringHelper.nullToEmpty(workFlow.get("nodename"));//步骤名称(节点名称)
+//                        String creatorphid = StringHelper.nullToEmpty(workFlow.get("creatorphid"));//创建人phid
+//                        LocalDateTime dateTime1 = LocalDateTime.parse(wfInfo.get(0).get("createdatetime").toString(), formatter);
+//                        LocalDateTime dateTime2 = LocalDateTime.parse(wfInfo.get(0).get("receivedatetime").toString(), formatter);
+//                        String createdatetime = dateTime1.format(bartDateFormat);
+//                        String receivedatetime = dateTime2.format(bartDateFormat);
+//                        for (int m = 0; m < userCount; m++) {
+//                            String userid = usersJA.getString(m);//接收人phid
+//                            JSONObject root_push = new JSONObject();
+//                            Fg3User receiverInfo = fg3UserMapper.selectById(userid);
+//                            Fg3User creatorInfo = fg3UserMapper.selectById(creatorphid);
+//                            String receiver = receiverInfo.getUserno();
+//                            String creator = creatorInfo.getUserno();
+//
+//                            root_push.put("syscode", registerCode);//注册系统编码
+//                            root_push.put("flowid", taskid);//
+//                            root_push.put("requestname", title);//待办标题
+//                            root_push.put("workflowname", workflowname);//
+//                            root_push.put("nodename", nodename);//
+//                            root_push.put("isremark", "2");//流程处理状态 0：待办 2：已办 4：办结
+//                            root_push.put("viewtype", "1");//流程查看状态 0：未读 1：已读;
+//                            root_push.put("creator", creator);//
+//                            root_push.put("createdatetime", createdatetime);//
+//                            root_push.put("receiver", receiver);//
+//                            root_push.put("receivedatetime", receivedatetime);//
+//                            root_push.put("receivets", System.currentTimeMillis() + "");//
+//                            //组装PCurl链接地址
+//                            String pwd = StringHelper.nullToEmpty(receiverInfo.getPwd());
+//                            String org = receiverInfo.getLastloginorg();
+//                            if (url.startsWith("/")) {
+//                                url = url.substring(1);
+//                            }//统一去掉第一个斜杠
+//                            String base64openUrl = URLEncoder.encode(url, "UTF-8");
+//                            //Sup/NG3WebLogin/SignLogin
+//                            String pcurl = i8Url + "/guohua/SSO/wfmsg?logid=" + receiver + "&database=" + i8DbName + "&orgid=" + org + "&openUrl=" + base64openUrl + "&urlTitle=" + URLEncoder.encode(title, "UTF-8") + "&openAlone=true";
+//                            pcurl=AESUtil.aesEncrypt(pcurl);
+//                            root_push.put("pcurl", pcurl);//PC穿透地址
+//                            //组装app链接地址
+//                            JSONObject pushdata = new JSONObject();
+//                            JSONObject pushdatadata = new JSONObject();
+//                            pushdatadata.put("piid", insid);
+//                            pushdatadata.put("taskinstid", taskid);
+//                            pushdata.put("data", pushdatadata);
+//                            String pushdd = URLEncoder.encode(pushdata.toJSONString(), "UTF-8");
+//                            String appurl = i8App + "&requestType=MEA&userid=" + receiver + "_" + i8DbName.replace("ng", "") + "&pushdata=" + pushdd;
+//                            appurl=AESUtil.aesEncrypt(appurl);
+//                            root_push.put("appurl", appurl);//H5穿透地址
+//                            StringEntity entity = new StringEntity(root_push.toJSONString(), Charset.forName("UTF-8"));
+//                            entity.setContentType("application/json");
+//                            Header[] headers = new Header[1];
+//                            Header header = new BasicHeader("Content-Type", "application/json");
+//                            headers[0] = header;
+//                            String addNewUrl = oaUrl + "/rest/ofs/ReceiveRequestInfoByJson";
+//                            String rtnMsg = httpHelper.Post(addNewUrl, entity, headers);
+//                            dbLog.info("done", "推送待办已办", addNewUrl + "推送:" + root_push.toJSONString() + "接口返回:" + rtnMsg);
+//                            //更新新增待办推送标识和时间
+//                            JSONObject joRtn = JSONObject.parseObject(rtnMsg);
+//                            if ("1".equals(joRtn.getString("operResult"))) {
+//                                Date nowTime = new Date();
+//                                UpdateWrapper updateWrapper = new UpdateWrapper();
+//                                updateWrapper.eq("taskid", taskid);
+//                                updateWrapper.eq("userid", userid);
+//                                updateWrapper.set("pushdone", "1");
+//                                updateWrapper.set("pushdonetime", bartDateFormat1.format(nowTime));
+//                                secDevTaskMsgMapper.update(null, updateWrapper);
+//                            } else {
+//                                if (joRtn.getString("message").contains("不存在")) {
+//                                    Date nowTime = new Date();
+//                                    UpdateWrapper updateWrapper = new UpdateWrapper();
+//                                    updateWrapper.eq("taskid", taskid);
+//                                    updateWrapper.eq("userid", userid);
+//                                    updateWrapper.set("pushdone", "1");
+//                                    updateWrapper.set("pushdonetime", bartDateFormat1.format(nowTime));
+//                                    secDevTaskMsgMapper.update(null, updateWrapper);
+//                                }
+//                            }
+//                        }
+//                    }
+//
+//                }
+//                else if ("delete".equals(status)) {
+//                    //删除待办
+//                    Thread.sleep(1000*60*2);
+//                    for (int m = 0; m < userCount; m++) {
+//                        String userid = usersJA.getString(m);//接收人phid
+//                        Fg3User receiverInfo = fg3UserMapper.selectById(userid);
+//                        String receiver = receiverInfo.getUserno();
+//                        JSONObject root_push = new JSONObject();
+//                        root_push.put("syscode", registerCode);//注册系统编码
+//                        root_push.put("flowid", taskid);//
+//                        root_push.put("userid", receiver);//
+//
+//                        StringEntity entity = new StringEntity(root_push.toJSONString(), Charset.forName("UTF-8"));
+//                        entity.setContentType("application/json");
+//                        Header[] headers = new Header[1];
+//                        Header header = new BasicHeader("Content-Type", "application/json");
+//                        headers[0] = header;
+//                        String delUrl = oaUrl + "/rest/ofs/deleteUserRequestInfoByJson";
+//                        String rtnMsg = httpHelper.Post(delUrl, entity, headers);
+//                        dbLog.info("delete", "推送删除待办", delUrl + "推送:" + root_push.toJSONString() + "接口返回:" + rtnMsg);
+//                        //更新新增待办推送标识和时间
+//                        JSONObject joRtn = JSONObject.parseObject(rtnMsg);
+//                        if ("1".equals(joRtn.getString("operResult"))) {
+//                            Date nowTime = new Date();
+//                            UpdateWrapper updateWrapper = new UpdateWrapper();
+//                            updateWrapper.eq("taskid", taskid);
+//                            updateWrapper.eq("userid", userid);
+//                            updateWrapper.set("pushdel", "1");
+//                            updateWrapper.set("pushdeltime", bartDateFormat1.format(nowTime));
+//                            secDevTaskMsgMapper.update(null, updateWrapper);
+//                        } else {
+//                            if (joRtn.getString("message").contains("不存在")) {
+//                                Date nowTime = new Date();
+//                                UpdateWrapper updateWrapper = new UpdateWrapper();
+//                                updateWrapper.eq("taskid", taskid);
+//                                updateWrapper.eq("userid", userid);
+//                                updateWrapper.set("pushdel", "1");
+//                                updateWrapper.set("pushdeltime", bartDateFormat1.format(nowTime));
+//                                secDevTaskMsgMapper.update(null, updateWrapper);
+//                            }
+//                        }
+//                    }
+//                }
 
             }
 
         } catch (Exception ex) {
+            ex.printStackTrace();
+            System.out.println("接口出现异常:" + ex.getMessage());
             rv.setMessage("接口出现异常:" + ex.getMessage());
         }
         return rv;

@@ -3,7 +3,9 @@ package com.newgrand.utils.i8util;
 import ch.qos.logback.classic.Logger;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -39,6 +41,8 @@ public class HttpHelper {
                 httpPost.setHeaders(headers);
 
             response = httpClient.execute(httpPost);
+            System.out.println("获取请求结果：" + response.toString());
+            System.out.println("获取请求结果码：" + response.getStatusLine().getStatusCode());
             if (response.getStatusLine().getStatusCode() == 200) {
                 HttpEntity entity = response.getEntity();
                 if (entity != null) {
@@ -46,6 +50,7 @@ public class HttpHelper {
                 }
             }
         } catch (IOException e) {
+            e.printStackTrace();
             logger.error(e.getMessage());
         } finally {
             try {

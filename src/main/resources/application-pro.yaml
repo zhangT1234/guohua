@@ -1,6 +1,6 @@
 server:
   servlet:
-    context-path: /zhengfang
+    context-path: /guohua
     # 端口号
   port: 18080
 
@@ -18,14 +18,14 @@ spring:
       datasource:
         master:
           driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-          url: jdbc:sqlserver://192.168.1.16:1433;DatabaseName=NG0001;encrypt=true;trustServerCertificate=true
+          url: jdbc:sqlserver://10.0.20.14:1433;DatabaseName=NG0001;encrypt=true;trustServerCertificate=true
           username: sa
-          password: newbd@505!zf
+          password: Asd@123
         one:
           driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-          url: jdbc:sqlserver://192.168.1.16:1433;DatabaseName=NG0001;encrypt=true;trustServerCertificate=true
+          url: jdbc:sqlserver://10.0.20.14:1433;DatabaseName=NG0001;encrypt=true;trustServerCertificate=true
           username: sa
-          password: newbd@505!zf
+          password: Asd@123
 
   #swagger3.0 兼容问题
   mvc:
@@ -34,25 +34,27 @@ spring:
 
 #i8相关
 i8:
-  currenturl: http://www.zfkg.com:18080
+  currenturl: http://10.0.20.13:18080
   #外网ip地址或域名
-  url: http://www.zfkg.com:2222
+  url: http://10.0.20.13:8889
   #内网ip地址
-  ip: http://www.zfkg.com:2222
+  ip: http://10.0.20.13:8889
+  outUrl: http://61.175.201.70:18080
+  outip: http://61.175.201.70:8889
   #接口专用账号
-  user: 9006
+  user: 9999
   #接口专用账号密码
   pwd:
   #数据库账套号 （注意用双引号，0开头会被识别为数值，省略）
   database: "0001"
   #数据库连接串（用于请求i8提供的内部webservice）
-  #    dblink: ConnectType=SqlClient;Server=172.21.205.168,1433;Database=NG0002;User Id=Sa;Password=Zjzx123?
-  dblink: ConnectType=ORACLEClient;Data Source=192.168.0.227:1521/ORACLE;UserId=NG0001;Password=zjsj123
+  dblink: ConnectType=SqlClient;Server=10.0.20.14:1433;Database=NG0001;User Id=sa;Password=Asd@123
+  #dblink: ConnectType=ORACLEClient;Data Source=192.168.0.227:1521/ORACLE;UserId=NG0001;Password=zjsj123
   #单点登录串
   ssoUrl: http://localhost
   ocode:
   databaseName: "NG0001"
-  appurl: http://appserver.netcall.cc/EnterpriseInfoService/wechat/pages/seeyon.html?platform=h5&NGCorpId=760002
+  appurl: http://appserver.netcall.cc/EnterpriseInfoService/wechat/pages/seeyon.html?platform=h5&NGCorpId=760794
 
 #http 请求相关
 http:
@@ -70,7 +72,7 @@ corn: 0 0/5 * * * ?
 
 
 oa:
-  url:
+  url: http://10.10.10.106:8888
   registerCode:
   username:
   password:

@@ -50,4 +50,7 @@ public class HrEpmMain implements Serializable {
 
     @TableField(value = "mobileno", exist = false)
     private String mobileno;
+
+    @TableField("empno")
+    private String empno;
 }

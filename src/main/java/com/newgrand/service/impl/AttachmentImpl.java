@@ -1,8 +1,13 @@
 package com.newgrand.service.impl;
 
+import cn.hutool.core.util.CharsetUtil;
+import cn.hutool.http.webservice.SoapClient;
 import com.alibaba.fastjson.JSONObject;
 import com.newgrand.config.ConfigValue;
+import com.newgrand.domain.model.I8FileBlock;
+import com.newgrand.domain.model.I8FileModel;
 import com.newgrand.service.AttachmentService;
+import com.newgrand.utils.i8util.I8FileUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
@@ -13,6 +18,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.dom4j.*;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -24,6 +30,9 @@ import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 附件服务
@@ -366,4 +375,213 @@ public class AttachmentImpl implements AttachmentService {
         }
         return null;
     }
+
+    /**
+     * 附件保存
+     *
+     * @param asr_guid 会话id
+     * @param asr_code 单据id
+     * @param asr_mode 是否异步 0 同步 1 异步
+     * @return
+     */
+    @Override
+    public boolean save(String asr_guid, String asr_code, String asr_mode) throws DocumentException {
+        SoapClient soapClient = SoapClient.create(configValue.i8Url+"/filesrv/UploadFileService.asmx?wsdl")
+                .setCharset(CharsetUtil.CHARSET_UTF_8)
+                // 设置调用方法名称以及命名空间
+                .setMethod("Save", "http://tempuri.org/")
+                // 设置参数名称及参数值
+                .setParam("asr_guid", asr_guid)
+                .setParam("asr_code", asr_code)
+                .setParam("asr_mode", "0")
+                // 设置超时时间
+                .setConnectionTimeout(15000)
+                .setReadTimeout(15000)
+                .timeout(15000);
+
+        // 调用webservice接口
+        String result = soapClient.send();
+        Document document = DocumentHelper.parseText(result);
+        //指向根节点
+        Element root2 = document.getRootElement();
+        String resData = root2.element("Body").element("SaveResponse").elementText("SaveResult");
+        if ("1".equals(resData)) {
+            return true;
+        }
+        throw new RuntimeException(resData);
+    }
+
+    /**
+     * 附件保存
+     */
+    @Override
+    public boolean upLoadFile(I8FileModel i8FileModel) {
+        SoapClient soapClient = SoapClient.create("http://61.175.201.70:8889/filesrv/UploadFileService.asmx?wsdl")
+                .setCharset(CharsetUtil.CHARSET_UTF_8)
+                // 设置调用方法名称以及命名空间
+                .setMethod("SaveData", "http://tempuri.org/")
+                // 设置参数名称及参数值
+                .setParam("asr_guid", "")
+                .setParam("asr_code", i8FileModel.getAsr_code())
+                .setParam("asr_table", i8FileModel.getAsr_table())
+                .setParam("asr_attach_table", i8FileModel.getAsr_attach_table())
+                .setParam("asr_dbconn", "ConnectType=SqlClient;Server=10.0.20.14:1433;Database=NG0001;User Id=sa;Password=Asd@123")
+                .setParam("asr_params", i8FileModel.getAsr_fillname())
+                .setParam("asr_data", i8FileModel.getAsr_data_base64())
+                .setParam("asr_name", i8FileModel.getAsr_fillname())
+                .setParam("approved", "")
+                .setParam("containerid", "")
+                // 设置超时时间
+                .setConnectionTimeout(15000)
+                .setReadTimeout(15000)
+                .timeout(15000);
+
+
+        try {
+            // 调用webservice接口
+            String result = soapClient.send();
+//            Document document = DocumentHelper.parseText(result);
+//            //指向根节点
+//            Element root2 = document.getRootElement();
+//            String resData = root2.element("Body").element("SaveResponse").elementText("SaveResult");
+//            if ("1".equals(resData)) {
+//                return true;
+//            }
+             if (result!=null && result.contains("<SaveDataResult>1</SaveDataResult>")) {
+                 return true;
+             }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * 附件数据分片调用webservice
+     *
+     * @param asr_session_guid 附件uuid（唯一）
+     * @param asr_data         附件二进制
+     * @param fileid           附件id
+     * @param curpart          当前片数
+     * @param totalparts       附件总片数
+     * @param filemd5          附件mde5
+     * @param filesize         附件长度
+     * @param asr_part_size    分片大小
+     * @param isAppUpload      是否app 默认 0
+     * @return
+     */
+    @Override
+    public boolean blockUpload(String asr_session_guid, String asr_data, String fileid, String filename, Integer curpart, Integer totalparts, String filemd5, String filesize, Integer asr_part_size, String isAppUpload) throws DocumentException {
+        SoapClient soapClient = SoapClient.create(configValue.i8Url+"/filesrv/UploadFileService.asmx?wsdl")
+                .setCharset(CharsetUtil.CHARSET_UTF_8)
+                // 设置调用方法名称以及命名空间
+                .setMethod("BlockUpload", "http://tempuri.org/")
+                // 设置参数名称及参数值
+                .setParam("asr_session_guid", asr_session_guid)
+                .setParam("asr_data", asr_data)
+                .setParam("filename", filename)
+                .setParam("fileid", fileid)
+                .setParam("curpart", curpart)
+                .setParam("totalparts", totalparts)
+                .setParam("filemd5", filemd5)
+                .setParam("filesize", filesize)
+                .setParam("asr_part_size", asr_part_size)
+                .setParam("isAppUpload", isAppUpload)
+                // 设置超时时间
+                .setConnectionTimeout(15000)
+                .setReadTimeout(15000)
+                .timeout(15000);
+
+        // 调用webservice接口
+        String result = soapClient.send();
+        Document document = DocumentHelper.parseText(result);
+        //指向根节点
+        Element root2 = document.getRootElement();
+        String resData = root2.element("Body").element("BlockUploadResponse").elementText("BlockUploadResult");
+        if ("1".equals(resData)) {
+            return true;
+        }
+        throw new RuntimeException("附件分片上传失败：" + resData);
+    }
+
+    @Override
+    public boolean postFileItem(I8FileModel data) {
+        try {
+            Boolean initialize = initEx(data.getAsr_session_guid(), data.getAsr_attach_table(),
+                    data.getAsr_code(), data.getAsr_table(), data.getAsr_fill(), data.getAsr_fillname());
+            if (!initialize) {
+                throw new RuntimeException("附件初始化失败");
+            }
+            log.error("附件初始化成功：" + data.getAsr_session_guid() + "," + data.getAsr_table());
+            //logService.info("postFileItem", "附件初始化成功", data.getAsr_session_guid(), data.getAsr_table());
+            if (data.getAsr_data().length == 0) {
+                throw new RuntimeException("附件二进制数据不能为空");
+            }
+            List<I8FileBlock> blockList = I8FileUtil.getFileBlock(data.getAsr_session_guid(), data.getAsr_fillname(), data.getAsr_data());
+            if (blockList.size() == 0) {
+                throw new RuntimeException("附件二进制数据分片异常");
+            }
+            log.error("附件二进制数据分片成功，分片数据条数：" + blockList.size() + "," + data.getAsr_table() + "," + data.getAsr_table());
+            //logService.info("postFileItem", "附件二进制数据分片成功", "分片数据条数：" + blockList.size(), data.getAsr_session_guid(), data.getAsr_table());
+            for (I8FileBlock item : blockList) {
+                blockUpload(item.getAsr_session_guid(), item.getAsr_data(),
+                        item.getFileid(), item.getFilename(), item.getCurpart(), item.getTotalParts(), item.getFilemd5(),
+                        item.getFilesize(), item.getAsr_part_size(), "0");
+            }
+            log.error("附件分片上传成功：" + data.getAsr_table() + "," + data.getAsr_table());
+            //logService.info("postFileItem", "附件分片上传成功", data.getAsr_session_guid(), data.getAsr_table());
+            save(data.getAsr_session_guid(), data.getAsr_code(), "0");
+            log.error("附件上传成功：" + data.getAsr_table() + "," + data.getAsr_table());
+            //logService.info("postFileItem", "附件上传成功", data.getAsr_session_guid(), data.getAsr_table());
+            return true;
+        } catch (Exception ex) {
+            log.error("附件上传失败：" + ex.getMessage());
+            //logService.error("postFileItem", "附件上传失败", ex.getMessage(), data.getAsr_session_guid(), data.getAsr_table());
+            return false;
+        }
+    }
+
+    /**
+     * 附件分片上传初始化
+     *
+     * @param asr_session_guid uuid（唯一）
+     * @param asr_attach_table 单据附件表
+     * @param asr_code         单据id
+     * @param asr_table        单据表名
+     * @param asr_fill         操作员
+     * @param asr_fillname     附件名称
+     * @return
+     */
+    @Override
+    public boolean initEx(String asr_session_guid, String asr_attach_table, String asr_code, String asr_table, String asr_fill, String asr_fillname) throws DocumentException {
+        SoapClient soapClient = SoapClient.create(configValue.i8Url+"/filesrv/UploadFileService.asmx?wsdl")
+                .setCharset(CharsetUtil.CHARSET_UTF_8)
+                // 设置调用方法名称以及命名空间
+                .setMethod("InitEx", "http://tempuri.org/")
+                // 设置参数名称及参数值
+                .setParam("asr_session_guid", asr_session_guid)
+                .setParam("asr_attach_table", asr_attach_table)
+                .setParam("asr_table", asr_table)
+                .setParam("asr_code", asr_code)
+                .setParam("asr_fill", asr_fill)
+                .setParam("asr_fillname", asr_fillname)
+                .setParam("asr_dbconn", configValue.dbConnect)
+                // 设置超时时间
+                .setConnectionTimeout(15000)
+                .setReadTimeout(15000)
+                .timeout(15000);
+
+        // 调用webservice接口
+        String result = soapClient.send();
+        Document document = DocumentHelper.parseText(result);
+        //指向根节点
+        Element root2 = document.getRootElement();
+        String InitExResult = root2.element("Body").element("InitExResponse").elementText("InitExResult");
+        if (asr_session_guid.equals(InitExResult)) {
+            return true;
+        }
+        throw new RuntimeException(InitExResult);
+    }
+
 }
