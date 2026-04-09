@@ -235,21 +235,18 @@ public class BillServiceImpl implements BillService {
                     "SELECT phid,phid_mst,ng_insert_dt,phid_proj,ac_code,apply_amt_fc,apply_amt FROM fc3_pay_bill_det WHERE phid_mst= '" + phid + "'"
             );
             if (CollectionUtil.isNotEmpty(billD)) {
-                for (Map<String, Object> map : billD) {
+//                for (Map<String, Object> map : billD) {
                     Map<String, Object> det = new HashMap<>();
-                    String dt = map.get("ng_insert_dt")!=null?map.get("ng_insert_dt").toString():"";
-                    String proj = map.get("phid_proj")!=null?map.get("phid_proj").toString():"";
-                    String acCode = map.get("ac_code")!=null?map.get("ac_code").toString():"";
-                   // String supply = map.get("phid_supply")!=null?map.get("phid_supply").toString():"";
-                    String applyAmtFc = map.get("apply_amt_fc")!=null?map.get("apply_amt_fc").toString():"";
-                    String applyAmt = map.get("apply_amt")!=null?map.get("apply_amt").toString():"";
-                    String xzdid = map.get("phid")!=null?map.get("phid").toString():"";
+//                    String dt = map.get("ng_insert_dt")!=null?map.get("ng_insert_dt").toString():"";
+//                    String proj = map.get("phid_proj")!=null?map.get("phid_proj").toString():"";
+//                    String acCode = map.get("ac_code")!=null?map.get("ac_code").toString():"";
+//                   // String supply = map.get("phid_supply")!=null?map.get("phid_supply").toString():"";
+//                    String applyAmtFc = map.get("apply_amt_fc")!=null?map.get("apply_amt_fc").toString():"";
+//                    String applyAmt = map.get("apply_amt")!=null?map.get("apply_amt").toString():"";
+//                    String xzdid = map.get("phid")!=null?map.get("phid").toString():"";
 
-                    det.put("xzdid", xzdid);
-                    if (dt.length()>10) {
-                        dt = dt.substring(0,10);
-                    }
-                    det.put("fyfsrq", dt);
+                    det.put("xzdid", phid);
+                    det.put("fyfsrq", applyDate);
 //                    if (StringUtils.isNotEmpty(proj)) {
 //                        LambdaQueryWrapper<ProjectTableModel> queryWrapper = new LambdaQueryWrapper<>();
 //                        queryWrapper.eq(ProjectTableModel::getPhid, proj);
@@ -269,8 +266,8 @@ public class BillServiceImpl implements BillService {
 //                        }
 //                    }
                     det.put("pjzs", "");
-                    det.put("je", applyAmtFc!=null?applyAmtFc:"");
-                    det.put("bbje", applyAmt!=null?applyAmt:"");
+                    det.put("je", appproveAmtFc);
+                    det.put("bbje", appproveAmtFc);
                     det.put("xm", "1826");
 //                    if (StringUtils.isNotEmpty(phidRecBank)) {
 //                        List<Map<String, Object>> bank = jdbcTemplate.queryForList(
@@ -283,7 +280,7 @@ public class BillServiceImpl implements BillService {
 //                    }
 //                    det.put("skyhzh", recBankAccNo);
                     detailData.add(det);
-                }
+//                }
             }
             //获取附件
             String attachSql = "select phid,asr_guid,asr_fid,asr_id,asr_name,asr_fill,asr_fillname,asr_code,asr_table from attachment_record where asr_attach_table = 'c_pfc_attachment' and asr_table = 'fc3_pay_bill' and asr_code = '" + phid + "'";
@@ -349,7 +346,7 @@ public class BillServiceImpl implements BillService {
              String phid = billM.get(0).get("phid")!=null?billM.get(0).get("phid").toString():"";
              String billCode = billM.get(0).get("bill_code")!=null?billM.get(0).get("bill_code").toString():"";
              String billName = billM.get(0).get("bill_name")!=null?billM.get(0).get("bill_name").toString():"";
-             String phidEmployee = billM.get(0).get("phid_employee")!=null?billM.get(0).get("phid_employee").toString():"";
+             String phidEmployee = billM.get(0).get("phid_input_psn")!=null?billM.get(0).get("phid_input_psn").toString():"";
              String billDate = billM.get(0).get("bill_date")!=null?billM.get(0).get("bill_date").toString():"";
              String phidOrg = billM.get(0).get("phid_org")!=null?billM.get(0).get("phid_org").toString():"";
              String phidDept = billM.get(0).get("phid_dept")!=null?billM.get(0).get("phid_dept").toString():"";
@@ -359,26 +356,28 @@ public class BillServiceImpl implements BillService {
              String recBankAcc = billM.get(0).get("rec_bank_acc")!=null?billM.get(0).get("rec_bank_acc").toString():"";
              String remark = billM.get(0).get("remark")!=null?billM.get(0).get("remark").toString():"";
              String phidRecEnt = billM.get(0).get("phid_rec_ent")!=null?billM.get(0).get("phid_rec_ent").toString():"";
+             String amtFc = billM.get(0).get("amt_fc")!=null?billM.get(0).get("amt_fc").toString():"";
 
 
              Map<String, Object> mainData = new HashMap<>();
              //组装主表数据
              mainData.put("djbm", billCode);
              mainData.put("djlx", "otherPay");
+             mainData.put("hjbxje", amtFc);
              if (StringUtils.isNotEmpty(phidEmployee)) {
                  LambdaQueryWrapper<HrEpmMain> queryWrapper = new LambdaQueryWrapper<>();
                  queryWrapper.eq(HrEpmMain::getPhid, phidEmployee);
                  List<HrEpmMain> list = hrEpmMainService.list(queryWrapper);
                  if (CollectionUtil.isNotEmpty(list)) {
                      mainData.put("bxr", list.get(0).getCname());
-                     mainData.put("sqr", list.get(0).getEmpno());
+                     mainData.put("sqr", "103");
                  } else {
                      mainData.put("bxr", "");
-                     mainData.put("sqr", "");
+                     mainData.put("sqr", "103");
                  }
              } else {
                  mainData.put("bxr", "");
-                 mainData.put("sqr", "");
+                 mainData.put("sqr", "103");
              }
              if (billDate.length()>10) {
                  billDate = billDate.substring(0,10);
@@ -494,21 +493,21 @@ public class BillServiceImpl implements BillService {
                      "SELECT phid,phid_mst,ng_insert_dt,haveamt_fc,haveamt FROM fc3_otherpay_pc_d WHERE phid_mst= '" + phid + "'"
              );
              if (CollectionUtil.isNotEmpty(billD)) {
-                 for (Map<String, Object> map : billD) {
+//                 for (Map<String, Object> map : billD) {
                      Map<String, Object> det = new HashMap<>();
-                     String dt = map.get("ng_insert_dt")!=null?map.get("ng_insert_dt").toString():"";
-                     String haveamtFc = map.get("haveamt_fc")!=null?map.get("haveamt_fc").toString():"";
-                     String haveamt = map.get("haveamt")!=null?map.get("haveamt").toString():"";
-                     String xzdid = map.get("phid")!=null?map.get("phid").toString():"";
+//                     String dt = map.get("ng_insert_dt")!=null?map.get("ng_insert_dt").toString():"";
+//                     String haveamtFc = map.get("haveamt_fc")!=null?map.get("haveamt_fc").toString():"";
+//                     String haveamt = map.get("haveamt")!=null?map.get("haveamt").toString():"";
+//                     String xzdid = map.get("phid")!=null?map.get("phid").toString():"";
 
-                     det.put("xzdid", xzdid);
-                     if (dt.length()>10) {
-                         dt = dt.substring(0,10);
-                     }
-                     det.put("fyfsrq", dt);
+                     det.put("xzdid", phid);
+//                     if (dt.length()>10) {
+//                         dt = dt.substring(0,10);
+//                     }
+                     det.put("fyfsrq", billDate);
                      det.put("pjzs", "");
-                     det.put("je", haveamtFc);
-                     det.put("bbje", haveamt);
+                     det.put("je", amtFc);
+                     det.put("bbje", amtFc);
                      det.put("xm", "1826");
 //                     if (StringUtils.isNotEmpty(phidRecBank)) {
 //                         List<Map<String, Object>> bank = jdbcTemplate.queryForList(
@@ -521,7 +520,7 @@ public class BillServiceImpl implements BillService {
 //                     }
 //                     det.put("skyhzh", recBankAcc);
                       detailData.add(det);
-                 }
+//                 }
              }
              //获取附件
              String attachSql = "select phid,asr_guid,asr_fid,asr_id,asr_name,asr_fill,asr_fillname,asr_code,asr_table from attachment_record where asr_attach_table = 'c_pfc_attachment' and asr_table = 'fc3_otherpay_pc' and asr_code = '" + phid + "'";
@@ -575,7 +574,7 @@ public class BillServiceImpl implements BillService {
     @Scheduled(fixedDelay = 180 * 1000, initialDelay = 60 * 1000)
     public void pushOAWorkFlow() {
         log.info("执行定时推送OA！！！！！");
-        String sql = "select * from fc3_pay_bill where user_sftsoa = '是' and user_yts != 1 and pay_status != 2 and check_flag = 1";
+        String sql = "select * from fc3_pay_bill where user_sftsoa = '是' and ISNULL(user_yts, 0) != 1 and pay_status != 2 and check_flag = 1";
         List<Map<String, Object>> data = jdbcTemplate.queryForList(sql);
         if (CollectionUtil.isNotEmpty(data)) {
             for (Map<String, Object> map : data) {
@@ -587,7 +586,7 @@ public class BillServiceImpl implements BillService {
             }
         }
 
-        String othepaysql = "select * from fc3_otherpay_pc where user_sftsoa = '是' and user_yts != 1 and pay_status != 1 and check_flag = 1";
+        String othepaysql = "select * from fc3_otherpay_pc where user_sftsoa = '是' and ISNULL(user_yts, 0) != 1 and pay_status != 1 and check_flag = 1";
         List<Map<String, Object>> otherdata = jdbcTemplate.queryForList(othepaysql);
         if (CollectionUtil.isNotEmpty(otherdata)) {
             for (Map<String, Object> map : otherdata) {

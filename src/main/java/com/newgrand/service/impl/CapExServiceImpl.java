@@ -1,6 +1,7 @@
 package com.newgrand.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
+import com.alibaba.fastjson.JSON;
 import com.newgrand.domain.dto.CapExDetailRequest;
 import com.newgrand.domain.dto.CapExRequest;
 import com.newgrand.domain.model.I8ReturnModel;
@@ -26,6 +27,7 @@ public class CapExServiceImpl implements CapExService {
 
     @Override
     public I8ReturnModel updateCapEx(CapExRequest capExRequest){
+        log.info("回调接口单据编码：" + capExRequest.getBillNo());
         if  ("payBill".equals(capExRequest.getCapExType())) {
              if (capExRequest.getPayStatus() == 0 ) {
                  //失败 更新支付状态 3
@@ -35,8 +37,10 @@ public class CapExServiceImpl implements CapExService {
                  List<Map<String, Object>> fc3PayBill = jdbcTemplate.queryForList(
                          "SELECT phid,appprove_amt_fc,phid_sourcemid FROM fc3_pay_bill where bill_code = '" + capExRequest.getBillNo() + "'"
                  );
+                 log.info("回调接口单据查询数据：" + JSON.toJSONString(fc3PayBill));
                  String phidSourcemId = fc3PayBill.get(0).get("phid_sourcemid")!=null?fc3PayBill.get(0).get("phid_sourcemid").toString():"";
                  String appproveAmtFc = fc3PayBill.get(0).get("appprove_amt_fc")!=null?fc3PayBill.get(0).get("appprove_amt_fc").toString():"0";
+                 String mainPhid = fc3PayBill.get(0).get("phid")!=null?fc3PayBill.get(0).get("phid").toString():"";
                  BigDecimal appproveAmtFcDecimal  = new BigDecimal(appproveAmtFc);
 
                  List<Map<String, Object>> fc3PayplanPc = jdbcTemplate.queryForList(
@@ -60,10 +64,10 @@ public class CapExServiceImpl implements CapExService {
                  }
                  List<CapExDetailRequest> list = capExRequest.getDetail();
                  if (CollectionUtil.isNotEmpty(list)) {
-                       for (CapExDetailRequest capExDetailRequest : list) {
+//                       for (CapExDetailRequest capExDetailRequest : list) {
                            //明细数据
                            List<Map<String, Object>> fc3PayBillDet = jdbcTemplate.queryForList(
-                                   "select phid,phid_mst,phid_proj,ac_code,apply_amt_fc,phid_sourcemid,phid_sourceid,approve_amt_fc FROM fc3_pay_bill_det WHERE phid= '" + capExDetailRequest.getXzdid() + "'"
+                                   "select phid,phid_mst,phid_proj,ac_code,apply_amt_fc,phid_sourcemid,phid_sourceid,approve_amt_fc FROM fc3_pay_bill_det WHERE phid_mst= '" + mainPhid + "'"
                            );
                            if (CollectionUtil.isNotEmpty(fc3PayBillDet)) {
                                   for (Map<String, Object> map : fc3PayBillDet) {
@@ -98,7 +102,7 @@ public class CapExServiceImpl implements CapExService {
                                        }
                                   }
                            }
-                       }
+//                       }
                  }
                  jdbcTemplate.update("UPDATE fc3_pay_bill set pay_status = ? where bill_code = ?", 2, capExRequest.getBillNo());
              }
