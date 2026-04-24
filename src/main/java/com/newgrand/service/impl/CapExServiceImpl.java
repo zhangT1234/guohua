@@ -2,9 +2,13 @@ package com.newgrand.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSON;
+import com.newgrand.domain.dto.CapExAttachRequest;
 import com.newgrand.domain.dto.CapExDetailRequest;
 import com.newgrand.domain.dto.CapExRequest;
+import com.newgrand.domain.model.FileModel;
+import com.newgrand.domain.model.I8FileModel;
 import com.newgrand.domain.model.I8ReturnModel;
+import com.newgrand.service.AttachmentService;
 import com.newgrand.service.CapExService;
 import com.newgrand.utils.i8util.I8ResultUtil;
 import lombok.RequiredArgsConstructor;
@@ -13,10 +17,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -24,6 +32,9 @@ import java.util.Map;
 public class CapExServiceImpl implements CapExService {
 
     private final JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private AttachmentService attachmentService;
 
     @Override
     public I8ReturnModel updateCapEx(CapExRequest capExRequest){
@@ -141,6 +152,118 @@ public class CapExServiceImpl implements CapExService {
             }
         }
         return I8ResultUtil.success("同步更新成功", "");
+    }
+
+    @Override
+    public I8ReturnModel updateAttachment(CapExAttachRequest capExAttachRequest){
+        log.info("回调接口单据编码：" + capExAttachRequest.getBillNo());
+        if  ("payBill".equals(capExAttachRequest.getCapExType())) {
+            List<Map<String, Object>> payBill = jdbcTemplate.queryForList(
+                    "SELECT phid FROM fc3_pay_bill where bill_code = '" + capExAttachRequest.getBillNo() + "'"
+            );
+            if (CollectionUtil.isNotEmpty(payBill)) {
+                String phid = payBill.get(0).get("phid") != null ? payBill.get(0).get("phid").toString() : null;
+                if (phid != null) {
+                    upLoadFile(phid, "fc3_pay_bill", capExAttachRequest.getFileUrl());
+                }
+            }
+        } else if ("otherPay".equals(capExAttachRequest.getCapExType())) {
+            List<Map<String, Object>> otherPay = jdbcTemplate.queryForList(
+                    "SELECT phid FROM fc3_otherpay_pc where bill_code = '" + capExAttachRequest.getBillNo() + "'"
+            );
+            if (CollectionUtil.isNotEmpty(otherPay)) {
+                String phid = otherPay.get(0).get("phid") != null ? otherPay.get(0).get("phid").toString() : null;
+                if (phid != null) {
+                    upLoadFile(phid, "fc3_otherpay_pc", capExAttachRequest.getFileUrl());
+                }
+            }
+        } else if ("tendPay".equals(capExAttachRequest.getCapExType())) {
+            List<Map<String, Object>> tendPay = jdbcTemplate.queryForList(
+                    "SELECT phid FROM crm3_tend_pay where bill_code = '" + capExAttachRequest.getBillNo() + "'"
+            );
+            if (CollectionUtil.isNotEmpty(tendPay)) {
+                String phid = tendPay.get(0).get("phid") != null ? tendPay.get(0).get("phid").toString() : null;
+                if (phid != null) {
+                    upLoadFile(phid, "crm3_tend_pay", capExAttachRequest.getFileUrl());
+                }
+            }
+        } else if ("guaranteePay".equals(capExAttachRequest.getCapExType())) {
+            List<Map<String, Object>> tendguaranteePay = jdbcTemplate.queryForList(
+                    "SELECT phid FROM p_form_tendguarantee where bill_code = '" + capExAttachRequest.getBillNo() + "'"
+            );
+            if (CollectionUtil.isNotEmpty(tendguaranteePay)) {
+                String phid = tendguaranteePay.get(0).get("phid") != null ? tendguaranteePay.get(0).get("phid").toString() : null;
+                if (phid != null) {
+                    upLoadFile(phid, "p_form_tendguarantee", capExAttachRequest.getFileUrl());
+                }
+            }
+        }
+        return I8ResultUtil.success("同步更新附件成功", "");
+    }
+
+    public void upLoadFile(String attachmentId, String asrtable, String fileUrl) {
+        String fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
+        String dirPath = "D:\\guohua\\file\\" + attachmentId;
+        File dir = new File(dirPath);
+        if (!dir.exists()) {
+            boolean created = dir.mkdirs();
+        }
+        String targetFile = "D:\\guohua\\file\\" + attachmentId + "\\" + fileName;
+        HttpURLConnection connection = null;
+        try{
+            URL url = new URL(fileUrl);
+            connection = (HttpURLConnection) url.openConnection();
+            BufferedInputStream in = new BufferedInputStream(connection.getInputStream());
+            FileOutputStream fileOutputStream = new FileOutputStream(targetFile);
+            byte[] dataBuffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
+                fileOutputStream.write(dataBuffer, 0, bytesRead);
+            }
+            log.info("文件下载完成: " + targetFile);
+        }catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (connection!=null) {
+                connection.disconnect();
+            }
+        }
+        //附件上传
+        uploadAttachmentInfo(attachmentId, asrtable, fileName, targetFile);
+    }
+
+
+    //上传附件
+    public void uploadAttachmentInfo(String asrCode, String asrTable, String fileName, String filePath){
+        File file = new File(filePath);
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(file);
+            byte[] bytes = new byte[(int) file.length()];
+            fis.read(bytes);
+            I8FileModel data = new I8FileModel();
+            UUID uuid = UUID.randomUUID();
+            data.setAsr_session_guid(uuid.toString());
+            data.setAsr_attach_table("c_pfc_attachment");
+            data.setAsr_table(asrTable);
+            data.setAsr_code(asrCode);
+            data.setAsr_fillname("asr_name=" + fileName + "&asr_fill=315211029000006&asr_fillname=9997");
+            data.setAsr_data(bytes);
+            String base64Encoded = Base64.getEncoder().encodeToString(bytes);
+            data.setAsr_data_base64(base64Encoded);
+            boolean result = attachmentService.upLoadFile(data);
+            log.info("回调附件上传结果：" + result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (fis!=null) {
+                try {
+                    fis.close();
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
 }

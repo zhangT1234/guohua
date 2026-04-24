@@ -1,5 +1,6 @@
 package com.newgrand.controller;
 
+import com.newgrand.domain.dto.CapExAttachRequest;
 import com.newgrand.domain.dto.CapExRequest;
 import com.newgrand.domain.model.I8ReturnModel;
 import com.newgrand.service.CapExService;
@@ -24,6 +25,12 @@ public class CapExController {
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     I8ReturnModel sync(@RequestBody CapExRequest capExRequest) {
         return capExService.updateCapEx(capExRequest);
+    }
+
+    @ApiOperation(value = "回调同步附件", notes = "回调同步附件接口")
+    @RequestMapping(value = "/updateAttachment", method = RequestMethod.POST)
+    I8ReturnModel updateAttachment(@RequestBody CapExAttachRequest capExAttachRequest) {
+        return capExService.updateAttachment(capExAttachRequest);
     }
 
 }
