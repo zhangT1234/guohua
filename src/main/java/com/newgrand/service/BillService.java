@@ -10,4 +10,7 @@ public interface BillService {
 
     I8ReturnModel otherPayOaWorkflow(Long phid);
 
+    I8ReturnModel tendPayOaWorkflow(Long phid);
+
+    I8ReturnModel guaranteePayOaWorkflow(Long phid);
 }

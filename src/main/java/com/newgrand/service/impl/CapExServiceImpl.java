@@ -31,7 +31,7 @@ public class CapExServiceImpl implements CapExService {
         if  ("payBill".equals(capExRequest.getCapExType())) {
              if (capExRequest.getPayStatus() == 0 ) {
                  //失败 更新支付状态 3
-                 jdbcTemplate.update("UPDATE fc3_pay_bill set pay_status = ? where bill_code = ?", 3, capExRequest.getBillNo());
+                 jdbcTemplate.update("UPDATE fc3_pay_bill set pay_status = ?, user_yts = ? where bill_code = ?", 3, 3, capExRequest.getBillNo());
              } else if (capExRequest.getPayStatus() == 1 ) {
                  //成功 更新支付状态 2
                  List<Map<String, Object>> fc3PayBill = jdbcTemplate.queryForList(
@@ -104,18 +104,41 @@ public class CapExServiceImpl implements CapExService {
                            }
 //                       }
                  }
-                 jdbcTemplate.update("UPDATE fc3_pay_bill set pay_status = ? where bill_code = ?", 2, capExRequest.getBillNo());
+                 jdbcTemplate.update("UPDATE fc3_pay_bill set pay_status = ?, user_yts = ? where bill_code = ?", 2, 1, capExRequest.getBillNo());
+             } else if (capExRequest.getPayStatus() == 2 ) {
+                 jdbcTemplate.update("UPDATE fc3_pay_bill set user_yts = ? where bill_code = ?",  6, capExRequest.getBillNo());
              }
            // jdbcTemplate.update("UPDATE fc3_pay_bill set pay_status = ? , appprove_amt_fc = ? where bill_code = ?", capExRequest.getPayStatus(), capExRequest.getAppproveAmtFc(), capExRequest.getBillNo());
         } else if ("otherPay".equals(capExRequest.getCapExType())) {
             if (capExRequest.getPayStatus() == 0 ) {
                 //失败 更新支付状态
-                jdbcTemplate.update("UPDATE fc3_otherpay_pc set pay_status = ? where bill_code = ?", capExRequest.getPayStatus(), capExRequest.getBillNo());
+                jdbcTemplate.update("UPDATE fc3_otherpay_pc set pay_status = ?, user_yts = ? where bill_code = ?", capExRequest.getPayStatus(), 3, capExRequest.getBillNo());
             } else if (capExRequest.getPayStatus() == 1 ) {
                 //成功 判断明细表金额是否相同 相同状态是1 不相同状态是2
-                jdbcTemplate.update("UPDATE fc3_otherpay_pc set pay_status = ? where bill_code = ?", capExRequest.getPayStatus(), capExRequest.getBillNo());
+                jdbcTemplate.update("UPDATE fc3_otherpay_pc set pay_status = ?, user_yts = ? where bill_code = ?", capExRequest.getPayStatus(), 1, capExRequest.getBillNo());
+            } else if (capExRequest.getPayStatus() == 2 ) {
+                jdbcTemplate.update("UPDATE fc3_otherpay_pc set user_yts = ? where bill_code = ?", 6, capExRequest.getBillNo());
             }
-          //  jdbcTemplate.update("UPDATE fc3_otherpay_pc set pay_status = ? , amt_fc = ? where bill_code = ?", capExRequest.getPayStatus(), capExRequest.getAppproveAmtFc(), capExRequest.getBillNo());
+        } else if ("tendPay".equals(capExRequest.getCapExType())) {
+            if (capExRequest.getPayStatus() == 0 ) {
+                //失败 更新支付状态
+                jdbcTemplate.update("UPDATE crm3_tend_pay set user_yts = ? where bill_no = ?", 3, capExRequest.getBillNo());
+            } else if (capExRequest.getPayStatus() == 1 ) {
+                //成功
+                jdbcTemplate.update("UPDATE crm3_tend_pay set state = ?, user_yts = ? where bill_no = ?", 2, 1, capExRequest.getBillNo());
+            } else if (capExRequest.getPayStatus() == 2 ) {
+                jdbcTemplate.update("UPDATE crm3_tend_pay set user_yts = ? where bill_no = ?", 6, capExRequest.getBillNo());
+            }
+        } else if ("guaranteePay".equals(capExRequest.getCapExType())) {
+            if (capExRequest.getPayStatus() == 0 ) {
+                //失败 更新支付状态
+                jdbcTemplate.update("UPDATE p_form_tendguarantee set user_yts = ? where bill_no = ?", 3, capExRequest.getBillNo());
+            } else if (capExRequest.getPayStatus() == 1 ) {
+                //成功
+                jdbcTemplate.update("UPDATE p_form_tendguarantee set u_status = ?, user_yts = ? where bill_no = ?", capExRequest.getPayStatus(), 1, capExRequest.getBillNo());
+            } else if (capExRequest.getPayStatus() == 2 ) {
+                jdbcTemplate.update("UPDATE p_form_tendguarantee set user_yts = ? where bill_no = ?", 6, capExRequest.getBillNo());
+            }
         }
         return I8ResultUtil.success("同步更新成功", "");
     }

@@ -292,7 +292,7 @@ public class BillServiceImpl implements BillService {
                     String asrFid = map.get("asr_fid")!=null?map.get("asr_fid").toString():"";
                     String asrName = map.get("asr_name")!=null?map.get("asr_name").toString():"";
                     String asrFid3 = asrFid.substring(0,3);
-                    String fileUrl = i8outip + "/JFileSrv/previewFiles/" + asrFid3 + "/" + asrFid + "/source/" + asrName + "?isapp=1&notExistFileReload=1&asrTable=" + asrTable + "&asrCode=" + phid + "&fileName=" + asrName + "&dbToken=0001&compressPic=0";
+                    String fileUrl = i8outip + "/JFileSrv/api/downloadFile?dbToken=0001&asrFid=" + asrFid;
                     Map<String, Object> attachInfo = new HashMap<>();
                     attachInfo.put("filePath", fileUrl);
                     attachInfo.put("fileName", asrName);
@@ -307,7 +307,7 @@ public class BillServiceImpl implements BillService {
                 if (result != null) {
                     if (result.contains("\"code\":\"SUCCESS\"")) {
                         log.info("发送OA流程返回结果成功》〉》〉》〉》id:" + id + result);
-                        jdbcTemplate.update("UPDATE fc3_pay_bill set user_yts = ? where phid = ?", 1, id);
+                        jdbcTemplate.update("UPDATE fc3_pay_bill set user_yts = ? where phid = ?", 2, id);
                         return I8ResultUtil.success(result);
                     } else {
                         log.info("发送OA流程返回结果失败》〉》〉》〉》id:" + id + result);
@@ -331,7 +331,7 @@ public class BillServiceImpl implements BillService {
      public I8ReturnModel otherPayOaWorkflow(Long id){
          log.info("其他项目单单据数据》〉》〉》〉》id:" + id);
          List<Map<String, Object>> billM = jdbcTemplate.queryForList(
-                 "SELECT phid,bill_code,bill_name,phid_employee,bill_date,phid_org,phid_dept,phid_fcur,exch_rate,phid_rec_bank,rec_bank_acc,remark,user_sftsoa,phid_rec_ent FROM fc3_otherpay_pc WHERE phid = '" + id + "'"
+                 "SELECT phid,bill_code,bill_name,phid_employee,bill_date,phid_org,phid_dept,phid_fcur,exch_rate,phid_rec_bank,rec_bank_acc,remark,user_sftsoa,phid_rec_ent,amt_fc,phid_input_psn FROM fc3_otherpay_pc WHERE phid = '" + id + "'"
          );
          if (CollectionUtil.isNotEmpty(billM)) {
              if (billM.get(0).get("user_sftsoa")!=null) {
@@ -532,7 +532,7 @@ public class BillServiceImpl implements BillService {
                      String asrFid = map.get("asr_fid")!=null?map.get("asr_fid").toString():"";
                      String asrName = map.get("asr_name")!=null?map.get("asr_name").toString():"";
                      String asrFid3 = asrFid.substring(0,3);
-                     String fileUrl = i8outip + "/JFileSrv/previewFiles/" + asrFid3 + "/" + asrFid + "/source/" + asrName + "?isapp=1&notExistFileReload=1&asrTable=" + asrTable + "&asrCode=" + phid + "&fileName=" + asrName + "&dbToken=0001&compressPic=0";
+                     String fileUrl = i8outip + "/JFileSrv/api/downloadFile?dbToken=0001&asrFid=" + asrFid;
                      Map<String, Object> attachInfo = new HashMap<>();
                      attachInfo.put("filePath", fileUrl);
                      attachInfo.put("fileName", asrName);
@@ -546,7 +546,7 @@ public class BillServiceImpl implements BillService {
                  String result = oaWorkflowService.createWorkflow(requestName, workflowId, mainData, detailData, userId);
                  if (result != null) {
                      if (result.contains("\"code\":\"SUCCESS\"")) {
-                         jdbcTemplate.update("UPDATE fc3_otherpay_pc set user_yts = ? where phid = ?", 1, id);
+                         jdbcTemplate.update("UPDATE fc3_otherpay_pc set user_yts = ? where phid = ?", 2, id);
                          log.info("发送OA流程返回结果成功》〉》〉》〉》id:" + id + result);
                          return I8ResultUtil.success(result);
                      } else {
@@ -567,6 +567,345 @@ public class BillServiceImpl implements BillService {
          }
      }
 
+    @Override
+    public I8ReturnModel tendPayOaWorkflow(Long id) {
+        log.info("投标保证金缴纳单据数据》〉》〉》〉》id:" + id);
+        List<Map<String, Object>> billM = jdbcTemplate.queryForList(
+                "SELECT phid,bill_no,title,bill_dt,phid_org,creator,amt,bank,account,user_sftsoa,phid_enterprise,user_skdw FROM crm3_tend_pay WHERE phid = '" + id + "'"
+        );
+        if (CollectionUtil.isNotEmpty(billM)) {
+            if (billM.get(0).get("user_sftsoa")!=null) {
+                if (!"是".equals(billM.get(0).get("user_sftsoa").toString())) {
+                    log.info("该单据id没有开启推送oa  user_sftsoa:" + billM.get(0).get("user_sftsoa").toString() + "id:" + id);
+                    return I8ResultUtil.success("该单据id没有开启推送oa");
+                }
+            } else {
+                log.info("该单据id没有开启推送oa  user_sftsoa为null id:" + id);
+                return I8ResultUtil.success("该单据id没有开启推送oa");
+            }
+            String phid = billM.get(0).get("phid")!=null?billM.get(0).get("phid").toString():"";
+            String billCode = billM.get(0).get("bill_no")!=null?billM.get(0).get("bill_no").toString():"";
+            String billName = billM.get(0).get("title")!=null?billM.get(0).get("title").toString():"";
+            String phidEmployee = billM.get(0).get("creator")!=null?billM.get(0).get("creator").toString():"";
+            String billDate = billM.get(0).get("bill_dt")!=null?billM.get(0).get("bill_dt").toString():"";
+            String phidOrg = billM.get(0).get("phid_org")!=null?billM.get(0).get("phid_org").toString():"";
+            String phidRecBank = billM.get(0).get("bank")!=null?billM.get(0).get("bank").toString():"";
+            String recBankAcc = billM.get(0).get("account")!=null?billM.get(0).get("account").toString():"";
+            String phidRecEnt = billM.get(0).get("phid_enterprise")!=null?billM.get(0).get("phid_enterprise").toString():"";
+            String amtFc = billM.get(0).get("amt")!=null?billM.get(0).get("amt").toString():"";
+            String sdr = billM.get(0).get("user_skdw")!=null?billM.get(0).get("user_skdw").toString():"";
+
+
+            Map<String, Object> mainData = new HashMap<>();
+            //组装主表数据
+            mainData.put("djbm", billCode);
+            mainData.put("djlx", "tendPay");
+            mainData.put("hjbxje", amtFc);
+            String bxr = "";
+            if (StringUtils.isNotEmpty(phidEmployee)) {
+                LambdaQueryWrapper<HrEpmMain> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(HrEpmMain::getPhid, phidEmployee);
+                List<HrEpmMain> list = hrEpmMainService.list(queryWrapper);
+                if (CollectionUtil.isNotEmpty(list)) {
+                    bxr = list.get(0).getCname();
+                    mainData.put("bxr", list.get(0).getCname());
+                } else {
+                    mainData.put("bxr", "");
+                }
+            } else {
+                mainData.put("bxr", "");
+            }
+            if (billDate.length()>10) {
+                billDate = billDate.substring(0,10);
+            }
+            mainData.put("sqrq", billDate);
+            if (StringUtils.isNotEmpty(phidOrg)) {
+                LambdaQueryWrapper<FgOrglist> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.in(FgOrglist::getPhid, phidOrg);
+                List<FgOrglist> fgOrglist = fgOrglistService.list(queryWrapper);
+                if (CollectionUtil.isNotEmpty(fgOrglist)) {
+                    mainData.put("cwzz", fgOrglist.get(0).getUserFwId()!=null?fgOrglist.get(0).getUserFwId():"");
+                    mainData.put("fycddw", fgOrglist.get(0).getUserFwId()!=null?fgOrglist.get(0).getUserFwId():"");
+                    mainData.put("fycddwspyfb", fgOrglist.get(0).getUserOfsid()!=null?fgOrglist.get(0).getUserOfsid():"");
+                    mainData.put("szfb", fgOrglist.get(0).getUserOfsid()!=null?fgOrglist.get(0).getUserOfsid():"");
+                } else {
+                    mainData.put("cwzz", "");
+                    mainData.put("fycddw", "");
+                    mainData.put("fycddwspyfb", "");
+                    mainData.put("szfb", "");
+                }
+            } else {
+                mainData.put("cwzz", "");
+                mainData.put("fycddw", "");
+                mainData.put("fycddwspyfb", "");
+                mainData.put("szfb", "");
+            }
+
+            mainData.put("sdr", sdr);
+
+            mainData.put("bz", "1002Z0100000000001K1");
+            mainData.put("hl", "1");
+            mainData.put("bxsy", billName);
+            mainData.put("fycdbm", "302");
+            mainData.put("szbm", "301");
+            mainData.put("bxrbm", "301");
+            mainData.put("sqr", "103");
+            mainData.put("fycdbmzdydx", "302");
+
+            mainData.put("cbzxbm", "1004");
+            mainData.put("xjllxm", "0001A1100000000008UQ");
+            mainData.put("ncjsfs", "3");
+            mainData.put("yhzh", "1001A110000000000B9V");
+            mainData.put("cklx", "1001A110000000001HKU");
+            mainData.put("yhlx", "0001Z01000000000036H");
+
+            if (StringUtils.isNotEmpty(phidRecBank)) {
+                List<Map<String, Object>> bank = jdbcTemplate.queryForList(
+                        "SELECT phid,bankname FROM fg_bank WHERE phid='" + phidRecBank + "'"
+                );
+                if (CollectionUtil.isNotEmpty(bank)) {
+                    String bankName = bank.get(0).get("bankname")!=null?bank.get(0).get("bankname").toString():"";
+                    mainData.put("skyh", bankName);
+                } else {
+                    mainData.put("skyh", "");
+                }
+            } else {
+                mainData.put("skyh", "");
+            }
+            mainData.put("skyhzh", recBankAcc);
+
+
+            List<Map<String, Object>> detailData = new ArrayList<>();
+            String requestName = "GH-资金审批流程(国骅建设)new申请投标保证金-" + bxr;
+            //String workflowId = "419";   //测试
+            //String workflowId = "1117";   //正式
+            // String workflowId = "1099";   //正式
+            String workflowId = "1120";
+            //String userId = "1";
+            String userId = "103";
+
+            Map<String, Object> det = new HashMap<>();
+            det.put("xzdid", phid);
+            det.put("fyfsrq", billDate);
+            det.put("pjzs", "");
+            det.put("je", amtFc);
+            det.put("bbje", amtFc);
+            det.put("xm", "2011");
+            detailData.add(det);
+
+            //获取附件
+            String attachSql = "select phid,asr_guid,asr_fid,asr_id,asr_name,asr_fill,asr_fillname,asr_code,asr_table from attachment_record where asr_attach_table = 'asr_info' and asr_table = 'crm3_tend_pay' and asr_code = '" + phid + "'";
+            List<Map<String, Object>> attachInfos = jdbcTemplate.queryForList(attachSql);
+            List<Map<String, Object>> attachList = new ArrayList<>();
+            if (CollectionUtil.isNotEmpty(attachInfos)) {
+                for (Map<String, Object> map : attachInfos) {
+                    String asrTable = map.get("asr_table")!=null?map.get("asr_table").toString():"";
+                    String asrFid = map.get("asr_fid")!=null?map.get("asr_fid").toString():"";
+                    String asrName = map.get("asr_name")!=null?map.get("asr_name").toString():"";
+                    String asrFid3 = asrFid.substring(0,3);
+                    String fileUrl = i8outip + "/JFileSrv/api/downloadFile?dbToken=0001&asrFid=" + asrFid;
+                    Map<String, Object> attachInfo = new HashMap<>();
+                    attachInfo.put("filePath", fileUrl);
+                    attachInfo.put("fileName", asrName);
+                    attachList.add(attachInfo);
+                }
+            }
+            mainData.put("fj", attachList);
+            //发送OA流程
+            log.info("准备发送OA流程》〉》〉》〉》id:" + id);
+            try {
+                String result = oaWorkflowService.createWorkflow(requestName, workflowId, mainData, detailData, userId);
+                if (result != null) {
+                    if (result.contains("\"code\":\"SUCCESS\"")) {
+                        jdbcTemplate.update("UPDATE crm3_tend_pay set user_yts = ? where phid = ?", 2, id);
+                        log.info("发送OA流程返回结果成功》〉》〉》〉》id:" + id + result);
+                        return I8ResultUtil.success(result);
+                    } else {
+                        log.info("发送OA流程返回结果失败》〉》〉》〉》id:" + id + result);
+                        return I8ResultUtil.error(result);
+                    }
+                } else {
+                    log.info("发送OA流程返回结果》〉》〉》〉》id:" + id + "发送OA流程失败");
+                    return I8ResultUtil.error("发送OA流程失败");
+                }
+            } catch (Exception e) {
+                log.info("发送OA流程返回结果》〉》〉》〉》id:" + id + "发送OA流程异常：" + e.getMessage());
+                return I8ResultUtil.error("发送OA流程异常：" + e.getMessage());
+            }
+        } else {
+            log.info("发送OA流程返回结果》〉》〉》〉》id:" + id + "该单据id不存在付款单数据");
+            return I8ResultUtil.error("该单据id不存在付款单数据");
+        }
+    }
+
+    @Override
+    public I8ReturnModel guaranteePayOaWorkflow(Long id) {
+        log.info("保函开具申请单据数据》〉》〉》〉》id:" + id);
+        List<Map<String, Object>> billM = jdbcTemplate.queryForList(
+                "SELECT phid,bill_no,title,bill_dt,ocode,fillpsn,u_gamt,user_sftsoa,u_outter,user_zh,user_skyh FROM p_form_tendguarantee WHERE phid = '" + id + "'"
+        );
+        if (CollectionUtil.isNotEmpty(billM)) {
+            if (billM.get(0).get("user_sftsoa")!=null) {
+                if (!"是".equals(billM.get(0).get("user_sftsoa").toString())) {
+                    log.info("该单据id没有开启推送oa  user_sftsoa:" + billM.get(0).get("user_sftsoa").toString() + "id:" + id);
+                    return I8ResultUtil.success("该单据id没有开启推送oa");
+                }
+            } else {
+                log.info("该单据id没有开启推送oa  user_sftsoa为null id:" + id);
+                return I8ResultUtil.success("该单据id没有开启推送oa");
+            }
+            String phid = billM.get(0).get("phid")!=null?billM.get(0).get("phid").toString():"";
+            String billCode = billM.get(0).get("bill_no")!=null?billM.get(0).get("bill_no").toString():"";
+            String billName = billM.get(0).get("title")!=null?billM.get(0).get("title").toString():"";
+            String phidEmployee = billM.get(0).get("fillpsn")!=null?billM.get(0).get("fillpsn").toString():"";
+            String billDate = billM.get(0).get("bill_dt")!=null?billM.get(0).get("bill_dt").toString():"";
+            String phidOrg = billM.get(0).get("ocode")!=null?billM.get(0).get("ocode").toString():"";
+            String recEntName = billM.get(0).get("u_outter")!=null?billM.get(0).get("u_outter").toString():"";
+            String amtFc = billM.get(0).get("u_gamt")!=null?billM.get(0).get("u_gamt").toString():"";
+            String zh = billM.get(0).get("user_zh")!=null?billM.get(0).get("user_zh").toString():"";
+            String skyh = billM.get(0).get("user_skyh")!=null?billM.get(0).get("user_skyh").toString():"";
+
+
+            Map<String, Object> mainData = new HashMap<>();
+            //组装主表数据
+            mainData.put("djbm", billCode);
+            mainData.put("djlx", "guaranteePay");
+            mainData.put("hjbxje", amtFc);
+            String bxr = "";
+            if (StringUtils.isNotEmpty(phidEmployee)) {
+                LambdaQueryWrapper<HrEpmMain> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(HrEpmMain::getPhid, phidEmployee);
+                List<HrEpmMain> list = hrEpmMainService.list(queryWrapper);
+                if (CollectionUtil.isNotEmpty(list)) {
+                    bxr = list.get(0).getCname();
+                    mainData.put("bxr", list.get(0).getCname());
+                } else {
+                    mainData.put("bxr", "");
+                }
+            } else {
+                mainData.put("bxr", "");
+            }
+            if (billDate.length()>10) {
+                billDate = billDate.substring(0,10);
+            }
+            mainData.put("sqrq", billDate);
+            if (StringUtils.isNotEmpty(phidOrg)) {
+                LambdaQueryWrapper<FgOrglist> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.in(FgOrglist::getPhid, phidOrg);
+                List<FgOrglist> fgOrglist = fgOrglistService.list(queryWrapper);
+                if (CollectionUtil.isNotEmpty(fgOrglist)) {
+                    mainData.put("cwzz", fgOrglist.get(0).getUserFwId()!=null?fgOrglist.get(0).getUserFwId():"");
+                    mainData.put("fycddw", fgOrglist.get(0).getUserFwId()!=null?fgOrglist.get(0).getUserFwId():"");
+                    mainData.put("fycddwspyfb", fgOrglist.get(0).getUserOfsid()!=null?fgOrglist.get(0).getUserOfsid():"");
+                    mainData.put("szfb", fgOrglist.get(0).getUserOfsid()!=null?fgOrglist.get(0).getUserOfsid():"");
+                } else {
+                    mainData.put("cwzz", "");
+                    mainData.put("fycddw", "");
+                    mainData.put("fycddwspyfb", "");
+                    mainData.put("szfb", "");
+                }
+            } else {
+                mainData.put("cwzz", "");
+                mainData.put("fycddw", "");
+                mainData.put("fycddwspyfb", "");
+                mainData.put("szfb", "");
+            }
+
+            mainData.put("sdr", recEntName);
+            mainData.put("bz", "1002Z0100000000001K1");
+            mainData.put("hl", "1");
+            mainData.put("bxsy", billName);
+            mainData.put("fycdbm", "302");
+            mainData.put("szbm", "301");
+            mainData.put("bxrbm", "301");
+            mainData.put("sqr", "103");
+            mainData.put("fycdbmzdydx", "302");
+
+            mainData.put("cbzxbm", "1004");
+            mainData.put("xjllxm", "0001A1100000000008UQ");
+            mainData.put("ncjsfs", "3");
+            mainData.put("yhzh", "1001A110000000000B9V");
+            mainData.put("cklx", "1001A110000000001HKU");
+            mainData.put("yhlx", "0001Z01000000000036H");
+
+            if (StringUtils.isNotEmpty(skyh)) {
+                List<Map<String, Object>> bank = jdbcTemplate.queryForList(
+                        "SELECT phid,bankname FROM fg_bank WHERE phid='" + skyh + "'"
+                );
+                if (CollectionUtil.isNotEmpty(bank)) {
+                    String bankName = bank.get(0).get("bankname")!=null?bank.get(0).get("bankname").toString():"";
+                    mainData.put("skyh", bankName);
+                } else {
+                    mainData.put("skyh", "");
+                }
+            } else {
+                mainData.put("skyh", "");
+            }
+            mainData.put("skyhzh", zh);
+
+
+            List<Map<String, Object>> detailData = new ArrayList<>();
+            String requestName = "GH-资金审批流程(国骅建设)new申请投标保证金-" + bxr;
+            //String workflowId = "419";   //测试
+            //String workflowId = "1117";   //正式
+            // String workflowId = "1099";   //正式
+            String workflowId = "1120";
+            //String userId = "1";
+            String userId = "103";
+
+            Map<String, Object> det = new HashMap<>();
+            det.put("xzdid", phid);
+            det.put("fyfsrq", billDate);
+            det.put("pjzs", "");
+            det.put("je", amtFc);
+            det.put("bbje", amtFc);
+            det.put("xm", "2011");
+            detailData.add(det);
+
+            //获取附件
+            String attachSql = "select phid,asr_guid,asr_fid,asr_id,asr_name,asr_fill,asr_fillname,asr_code,asr_table from attachment_record where asr_attach_table = 'c_pfc_attachment' and asr_table = 'p_form_tendguarantee' and asr_code = '" + phid + "'";
+            List<Map<String, Object>> attachInfos = jdbcTemplate.queryForList(attachSql);
+            List<Map<String, Object>> attachList = new ArrayList<>();
+            if (CollectionUtil.isNotEmpty(attachInfos)) {
+                for (Map<String, Object> map : attachInfos) {
+                    String asrTable = map.get("asr_table")!=null?map.get("asr_table").toString():"";
+                    String asrFid = map.get("asr_fid")!=null?map.get("asr_fid").toString():"";
+                    String asrName = map.get("asr_name")!=null?map.get("asr_name").toString():"";
+                    String asrFid3 = asrFid.substring(0,3);
+                    String fileUrl = i8outip + "/JFileSrv/api/downloadFile?dbToken=0001&asrFid=" + asrFid;
+                    Map<String, Object> attachInfo = new HashMap<>();
+                    attachInfo.put("filePath", fileUrl);
+                    attachInfo.put("fileName", asrName);
+                    attachList.add(attachInfo);
+                }
+            }
+            mainData.put("fj", attachList);
+            //发送OA流程
+            log.info("准备发送OA流程》〉》〉》〉》id:" + id);
+            try {
+                String result = oaWorkflowService.createWorkflow(requestName, workflowId, mainData, detailData, userId);
+                if (result != null) {
+                    if (result.contains("\"code\":\"SUCCESS\"")) {
+                        jdbcTemplate.update("UPDATE p_form_tendguarantee set user_yts = ? where phid = ?", 2, id);
+                        log.info("发送OA流程返回结果成功》〉》〉》〉》id:" + id + result);
+                        return I8ResultUtil.success(result);
+                    } else {
+                        log.info("发送OA流程返回结果失败》〉》〉》〉》id:" + id + result);
+                        return I8ResultUtil.error(result);
+                    }
+                } else {
+                    log.info("发送OA流程返回结果》〉》〉》〉》id:" + id + "发送OA流程失败");
+                    return I8ResultUtil.error("发送OA流程失败");
+                }
+            } catch (Exception e) {
+                log.info("发送OA流程返回结果》〉》〉》〉》id:" + id + "发送OA流程异常：" + e.getMessage());
+                return I8ResultUtil.error("发送OA流程异常：" + e.getMessage());
+            }
+        } else {
+            log.info("发送OA流程返回结果》〉》〉》〉》id:" + id + "该单据id不存在付款单数据");
+            return I8ResultUtil.error("该单据id不存在付款单数据");
+        }
+    }
 
     /**
      * 定时推送
@@ -574,7 +913,7 @@ public class BillServiceImpl implements BillService {
     @Scheduled(fixedDelay = 180 * 1000, initialDelay = 60 * 1000)
     public void pushOAWorkFlow() {
         log.info("执行定时推送OA！！！！！");
-        String sql = "select * from fc3_pay_bill where user_sftsoa = '是' and ISNULL(user_yts, 0) != 1 and pay_status != 2 and check_flag = 1";
+        String sql = "select * from fc3_pay_bill where user_sftsoa = '是' and ISNULL(user_yts, 0) = 0 and pay_status != 2 and check_flag = 1";
         List<Map<String, Object>> data = jdbcTemplate.queryForList(sql);
         if (CollectionUtil.isNotEmpty(data)) {
             for (Map<String, Object> map : data) {
@@ -586,7 +925,7 @@ public class BillServiceImpl implements BillService {
             }
         }
 
-        String othepaysql = "select * from fc3_otherpay_pc where user_sftsoa = '是' and ISNULL(user_yts, 0) != 1 and pay_status != 1 and check_flag = 1";
+        String othepaysql = "select * from fc3_otherpay_pc where user_sftsoa = '是' and ISNULL(user_yts, 0) = 0 and pay_status != 1 and check_flag = 1";
         List<Map<String, Object>> otherdata = jdbcTemplate.queryForList(othepaysql);
         if (CollectionUtil.isNotEmpty(otherdata)) {
             for (Map<String, Object> map : otherdata) {
@@ -594,6 +933,30 @@ public class BillServiceImpl implements BillService {
                 log.info("其他项目支出单定时推送OA！！！！！ 单据id:" + phid);
                 if (StringUtils.isNotEmpty(phid)) {
                     otherPayOaWorkflow(Long.parseLong(phid));
+                }
+            }
+        }
+
+        String tendPaySql = "select * from crm3_tend_pay where user_sftsoa = '是' and ISNULL(user_yts, 0) = 0 and state = 1 and chk_flg = 1";
+        List<Map<String, Object>> tendPayData = jdbcTemplate.queryForList(tendPaySql);
+        if (CollectionUtil.isNotEmpty(tendPayData)) {
+            for (Map<String, Object> map : tendPayData) {
+                String phid = map.get("phid")!=null?map.get("phid").toString():"";
+                log.info("投标保证金缴纳定时推送OA！！！！！ 单据id:" + phid);
+                if (StringUtils.isNotEmpty(phid)) {
+                    tendPayOaWorkflow(Long.parseLong(phid));
+                }
+            }
+        }
+
+        String guaranteePaySql = "select * from p_form_tendguarantee where user_sftsoa = '是' and ISNULL(user_yts, 0) = 0 and u_status = 0 and ischeck = 1";
+        List<Map<String, Object>> guaranteePayData = jdbcTemplate.queryForList(guaranteePaySql);
+        if (CollectionUtil.isNotEmpty(guaranteePayData)) {
+            for (Map<String, Object> map : guaranteePayData) {
+                String phid = map.get("phid")!=null?map.get("phid").toString():"";
+                log.info("保函开具申请定时推送OA！！！！！ 单据id:" + phid);
+                if (StringUtils.isNotEmpty(phid)) {
+                    guaranteePayOaWorkflow(Long.parseLong(phid));
                 }
             }
         }
