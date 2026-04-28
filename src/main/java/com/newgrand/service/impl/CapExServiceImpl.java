@@ -165,6 +165,9 @@ public class CapExServiceImpl implements CapExService {
                 String phid = payBill.get(0).get("phid") != null ? payBill.get(0).get("phid").toString() : null;
                 if (phid != null) {
                     upLoadFile(phid, "fc3_pay_bill", capExAttachRequest.getFileUrl());
+                    log.info("更新回单附件类型");
+                    String fileName = capExAttachRequest.getFileUrl().substring(capExAttachRequest.getFileUrl().lastIndexOf('/') + 1);
+                    jdbcTemplate.update("update attachment_record set typeid= ? where asr_table='fc3_pay_bill' and asr_code= ? and asr_name= ?", "823000000000013", phid, fileName);
                 }
             }
         } else if ("otherPay".equals(capExAttachRequest.getCapExType())) {
@@ -175,6 +178,9 @@ public class CapExServiceImpl implements CapExService {
                 String phid = otherPay.get(0).get("phid") != null ? otherPay.get(0).get("phid").toString() : null;
                 if (phid != null) {
                     upLoadFile(phid, "fc3_otherpay_pc", capExAttachRequest.getFileUrl());
+                    log.info("更新回单附件类型");
+                    String fileName = capExAttachRequest.getFileUrl().substring(capExAttachRequest.getFileUrl().lastIndexOf('/') + 1);
+                    jdbcTemplate.update("update attachment_record set typeid= ? where asr_table='fc3_otherpay_pc' and asr_code= ? and asr_name= ?", "823000000000013", phid, fileName);
                 }
             }
         } else if ("tendPay".equals(capExAttachRequest.getCapExType())) {
@@ -185,6 +191,9 @@ public class CapExServiceImpl implements CapExService {
                 String phid = tendPay.get(0).get("phid") != null ? tendPay.get(0).get("phid").toString() : null;
                 if (phid != null) {
                     upLoadFile(phid, "crm3_tend_pay", capExAttachRequest.getFileUrl());
+                    log.info("更新回单附件类型");
+                    String fileName = capExAttachRequest.getFileUrl().substring(capExAttachRequest.getFileUrl().lastIndexOf('/') + 1);
+                    jdbcTemplate.update("update attachment_record set typeid= ? where asr_table='crm3_tend_pay' and asr_code= ? and asr_name= ?", "823000000000013", phid, fileName);
                 }
             }
         } else if ("guaranteePay".equals(capExAttachRequest.getCapExType())) {
@@ -195,6 +204,9 @@ public class CapExServiceImpl implements CapExService {
                 String phid = tendguaranteePay.get(0).get("phid") != null ? tendguaranteePay.get(0).get("phid").toString() : null;
                 if (phid != null) {
                     upLoadFile(phid, "p_form_tendguarantee", capExAttachRequest.getFileUrl());
+                    log.info("更新回单附件类型");
+                    String fileName = capExAttachRequest.getFileUrl().substring(capExAttachRequest.getFileUrl().lastIndexOf('/') + 1);
+                    jdbcTemplate.update("update attachment_record set typeid= ? where asr_table='p_form_tendguarantee' and asr_code= ? and asr_name= ?", "823000000000013", phid, fileName);
                 }
             }
         }
