@@ -17,9 +17,9 @@ public class ReceiptNoticeRequest {
     @ApiModelProperty(value = "单据名称", required = true)
     private String billName;
 
-    @NotBlank(message = "回款属性不能为空")
-    @ApiModelProperty(value = "回款属性", required = true)
-    private Integer recFlag;
+//    @NotBlank(message = "回款属性不能为空")
+//    @ApiModelProperty(value = "回款属性", required = true)
+//    private Integer recFlag;
 
     @NotBlank(message = "付款单位不能为空")
     @ApiModelProperty(value = "付款单位", required = true)
@@ -27,11 +27,11 @@ public class ReceiptNoticeRequest {
 
     @NotBlank(message = "回款金额不能为空")
     @ApiModelProperty(value = "回款金额", required = true)
-    private BigDecimal recAmtFc;
+    private String recAmtFc;
 
     @NotBlank(message = "可认领金额不能为空")
     @ApiModelProperty(value = "可认领金额", required = true)
-    private BigDecimal takeAmtFc;
+    private String takeAmtFc;
 
     @ApiModelProperty(value = "银行", required = true)
     private String  userYh;

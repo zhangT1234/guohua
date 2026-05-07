@@ -39,14 +39,8 @@ public class ReceiptNoticeServiceImpl implements ReceiptNoticeService {
         try {
                 List<NameValuePair> urlParameters = new ArrayList<>();
                 HashMap<String, Object> mapInfo = new HashMap<>();
-                if (data.getRecAmtFc() == null) {
-                    data.setRecAmtFc(new BigDecimal(0));
-                }
-                if (data.getTakeAmtFc() == null) {
-                    data.setTakeAmtFc(new BigDecimal(0));
-                }
                 mapInfo.put("BillName", data.getBillName());
-                mapInfo.put("RecFlag", data.getRecFlag());
+                mapInfo.put("RecFlag", 1);
                 mapInfo.put("RecAmtFc", data.getRecAmtFc());
                 mapInfo.put("RecAmt", data.getRecAmtFc());
                 mapInfo.put("RestRecAmt", data.getRecAmtFc());
@@ -55,10 +49,18 @@ public class ReceiptNoticeServiceImpl implements ReceiptNoticeService {
                 mapInfo.put("TakeAmt", data.getTakeAmtFc());
                 mapInfo.put("RestTakeAmt", data.getTakeAmtFc());
                 mapInfo.put("RestTakeAmtFc", data.getTakeAmtFc());
-                mapInfo.put("ChangeAmtFc", data.getRecAmtFc().subtract(data.getTakeAmtFc()));
-                mapInfo.put("RestChangeAmt", data.getRecAmtFc().subtract(data.getTakeAmtFc()));
-                mapInfo.put("RestChangeAmtFc", data.getRecAmtFc().subtract(data.getTakeAmtFc()));
-                mapInfo.put("ChangeAmt", data.getRecAmtFc().subtract(data.getTakeAmtFc()));
+                if (data.getRecAmtFc() != null && data.getTakeAmtFc() != null) {
+                  String recAmtFc = data.getRecAmtFc();
+                  recAmtFc = recAmtFc.replaceAll(",", "");
+                  String takeAmtFc = data.getTakeAmtFc();
+                  takeAmtFc = takeAmtFc.replaceAll(",", "");
+                  BigDecimal recAmtFcBigDecimal = new BigDecimal(recAmtFc);
+                  BigDecimal takeAmtFcBigDecimal = new BigDecimal(takeAmtFc);
+                  mapInfo.put("ChangeAmtFc", recAmtFcBigDecimal.subtract(takeAmtFcBigDecimal));
+                  mapInfo.put("RestChangeAmt", recAmtFcBigDecimal.subtract(takeAmtFcBigDecimal));
+                  mapInfo.put("RestChangeAmtFc", recAmtFcBigDecimal.subtract(takeAmtFcBigDecimal));
+                  mapInfo.put("ChangeAmt", recAmtFcBigDecimal.subtract(takeAmtFcBigDecimal));
+                }
                 mapInfo.put("user_yh", data.getUserYh());
                 LambdaQueryWrapper<Fg3Enterprise> queryWrapper = new LambdaQueryWrapper<>();
                 queryWrapper.eq(Fg3Enterprise::getUserOfsid, data.getUserOfsid());
