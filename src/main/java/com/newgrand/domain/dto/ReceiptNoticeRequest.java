@@ -36,4 +36,7 @@ public class ReceiptNoticeRequest {
     @ApiModelProperty(value = "银行", required = true)
     private String  userYh;
 
+    @ApiModelProperty(value = "回款日期", required = false)
+    private String recDate;
+
 }

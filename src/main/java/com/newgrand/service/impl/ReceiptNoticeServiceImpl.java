@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,15 +63,14 @@ public class ReceiptNoticeServiceImpl implements ReceiptNoticeService {
                   mapInfo.put("ChangeAmt", recAmtFcBigDecimal.subtract(takeAmtFcBigDecimal));
                 }
                 mapInfo.put("user_yh", data.getUserYh());
-                LambdaQueryWrapper<Fg3Enterprise> queryWrapper = new LambdaQueryWrapper<>();
-                queryWrapper.eq(Fg3Enterprise::getUserOfsid, data.getUserOfsid());
-                List<Fg3Enterprise> list = fg3EnterpriseService.list(queryWrapper);
-                if (CollectionUtil.isNotEmpty(list)) {
-                    mapInfo.put("PhidPayEnt", list.get(0).getPhid());
+                mapInfo.put("PhidPayEnt", "");
+                mapInfo.put("user_fkdw", data.getUserOfsid());
+                if (data.getRecDate() != null) {
+                    mapInfo.put("RecDate", data.getRecDate());
+                } else {
+                    mapInfo.put("RecDate", LocalDate.now().toString());
                 }
-
                 String mstFormData = I8Converter.SetField(mstformDataStr, mapInfo);
-
                 urlParameters.add(new BasicNameValuePair("receiptnoticeformData", mstFormData));
                 urlParameters.add(new BasicNameValuePair("pointid", ""));
                 urlParameters.add(new BasicNameValuePair("type", "0"));
