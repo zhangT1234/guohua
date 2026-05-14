@@ -208,16 +208,20 @@ public class BillServiceImpl implements BillService {
 
             if (StringUtils.isNotEmpty(phidRecBank)) {
                 List<Map<String, Object>> bank = jdbcTemplate.queryForList(
-                        "SELECT phid,bankname FROM fg_bank WHERE phid='" + phidRecBank + "'"
+                        "SELECT phid,bankname,bankno FROM fg_bank WHERE phid='" + phidRecBank + "'"
                 );
                 if (CollectionUtil.isNotEmpty(bank)) {
                     String bankName = bank.get(0).get("bankname")!=null?bank.get(0).get("bankname").toString():"";
+                    String bankNo = bank.get(0).get("bankno")!=null?bank.get(0).get("bankno").toString():"";
                     mainData.put("skyh", bankName);
+                    mainData.put("skrxh", bankNo);
                 } else {
                     mainData.put("skyh", "");
+                    mainData.put("skrxh", "");
                 }
             } else {
                 mainData.put("skyh", "");
+                mainData.put("skrxh", "");
             }
             mainData.put("skyhzh", recBankAccNo);
 
@@ -465,16 +469,20 @@ public class BillServiceImpl implements BillService {
 
              if (StringUtils.isNotEmpty(phidRecBank)) {
                  List<Map<String, Object>> bank = jdbcTemplate.queryForList(
-                         "SELECT phid,bankname FROM fg_bank WHERE phid='" + phidRecBank + "'"
+                         "SELECT phid,bankname,bankno FROM fg_bank WHERE phid='" + phidRecBank + "'"
                  );
                  if (CollectionUtil.isNotEmpty(bank)) {
                      String bankName = bank.get(0).get("bankname")!=null?bank.get(0).get("bankname").toString():"";
+                     String bankNo = bank.get(0).get("bankno")!=null?bank.get(0).get("bankno").toString():"";
                      mainData.put("skyh", bankName);
+                     mainData.put("skrxh", bankNo);
                  } else {
                      mainData.put("skyh", "");
+                     mainData.put("skrxh", "");
                  }
              } else {
                  mainData.put("skyh", "");
+                 mainData.put("skrxh", "");
              }
              mainData.put("skyhzh", recBankAcc);
 
@@ -661,16 +669,20 @@ public class BillServiceImpl implements BillService {
 
             if (StringUtils.isNotEmpty(phidRecBank)) {
                 List<Map<String, Object>> bank = jdbcTemplate.queryForList(
-                        "SELECT phid,bankname FROM fg_bank WHERE phid='" + phidRecBank + "'"
+                        "SELECT phid,bankname,bankno FROM fg_bank WHERE phid='" + phidRecBank + "'"
                 );
                 if (CollectionUtil.isNotEmpty(bank)) {
                     String bankName = bank.get(0).get("bankname")!=null?bank.get(0).get("bankname").toString():"";
+                    String bankNo = bank.get(0).get("bankno")!=null?bank.get(0).get("bankno").toString():"";
                     mainData.put("skyh", bankName);
+                    mainData.put("skrxh", bankNo);
                 } else {
                     mainData.put("skyh", "");
+                    mainData.put("skrxh", "");
                 }
             } else {
                 mainData.put("skyh", "");
+                mainData.put("skrxh", "");
             }
             mainData.put("skyhzh", recBankAcc);
 
@@ -742,7 +754,7 @@ public class BillServiceImpl implements BillService {
     public I8ReturnModel guaranteePayOaWorkflow(Long id) {
         log.info("保函开具申请单据数据》〉》〉》〉》id:" + id);
         List<Map<String, Object>> billM = jdbcTemplate.queryForList(
-                "SELECT phid,bill_no,title,bill_dt,ocode,fillpsn,u_gamt,user_sftsoa,u_outter,user_zh,user_skyh FROM p_form_tendguarantee WHERE phid = '" + id + "'"
+                "SELECT phid,bill_no,title,bill_dt,ocode,fillpsn,u_gamt,user_sftsoa,u_outter,user_zh,user_skyh,u_remarks FROM p_form_tendguarantee WHERE phid = '" + id + "'"
         );
         if (CollectionUtil.isNotEmpty(billM)) {
             if (billM.get(0).get("user_sftsoa")!=null) {
@@ -764,6 +776,7 @@ public class BillServiceImpl implements BillService {
             String amtFc = billM.get(0).get("u_gamt")!=null?billM.get(0).get("u_gamt").toString():"";
             String zh = billM.get(0).get("user_zh")!=null?billM.get(0).get("user_zh").toString():"";
             String skyh = billM.get(0).get("user_skyh")!=null?billM.get(0).get("user_skyh").toString():"";
+            String uRemarks = billM.get(0).get("u_remarks")!=null?billM.get(0).get("u_remarks").toString():"";
 
 
             Map<String, Object> mainData = new HashMap<>();
@@ -814,7 +827,7 @@ public class BillServiceImpl implements BillService {
             mainData.put("sdr", recEntName);
             mainData.put("bz", "1002Z0100000000001K1");
             mainData.put("hl", "1");
-            mainData.put("bxsy", billName);
+            mainData.put("bxsy", billName + uRemarks);
             mainData.put("fycdbm", "302");
             mainData.put("szbm", "301");
             mainData.put("bxrbm", "301");
@@ -830,16 +843,20 @@ public class BillServiceImpl implements BillService {
 
             if (StringUtils.isNotEmpty(skyh)) {
                 List<Map<String, Object>> bank = jdbcTemplate.queryForList(
-                        "SELECT phid,bankname FROM fg_bank WHERE phid='" + skyh + "'"
+                        "SELECT phid,bankname,bankno FROM fg_bank WHERE phid='" + skyh + "'"
                 );
                 if (CollectionUtil.isNotEmpty(bank)) {
                     String bankName = bank.get(0).get("bankname")!=null?bank.get(0).get("bankname").toString():"";
+                    String bankNo = bank.get(0).get("bankno")!=null?bank.get(0).get("bankno").toString():"";
                     mainData.put("skyh", bankName);
+                    mainData.put("skrxh", bankNo);
                 } else {
                     mainData.put("skyh", "");
+                    mainData.put("skrxh", "");
                 }
             } else {
                 mainData.put("skyh", "");
+                mainData.put("skrxh", "");
             }
             mainData.put("skyhzh", zh);
 

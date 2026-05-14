@@ -72,7 +72,7 @@ public class OrgServiceImpl implements OrgService {
                 updateList.add(fgOrg);
             } else {
                 if ("Y".equals(orgSyncRequest.getOrgType())) {
-                    orgAddList.add(orgSyncRequest);
+                  //  orgAddList.add(orgSyncRequest);
                 } else {
                     deptAddList.add(orgSyncRequest);
                 }
@@ -86,10 +86,10 @@ public class OrgServiceImpl implements OrgService {
         //批量新增部门
         SyncResultDto deptDto = saveDeptList(deptAddList);
         SyncResultDto dto = new SyncResultDto();
-        dto.setSuccess(list.size() - orgDto.getFail() - deptDto.getFail());
-        dto.setFail(orgDto.getFail() + deptDto.getFail());
+        dto.setSuccess(deptAddList.size() - deptDto.getFail());
+        dto.setFail(deptDto.getFail());
         dto.setMsg(new ArrayList<>());
-        dto.getMsg().addAll(orgDto.getMsg());
+       // dto.getMsg().addAll(orgDto.getMsg());
         dto.getMsg().addAll(deptDto.getMsg());
         return I8ResultUtil.success("组织/部门批量同步更新返回", dto);
     }
