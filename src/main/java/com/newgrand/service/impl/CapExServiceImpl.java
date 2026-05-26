@@ -70,7 +70,8 @@ public class CapExServiceImpl implements CapExService {
                             if (restAmtResult.compareTo(BigDecimal.ZERO) > 0) {
                                 fc3PayplanPcPayStatus = 2;
                             }
-                            jdbcTemplate.update("UPDATE fc3_payplan_pc set plan_status = ? , rest_amt = ? , rest_amt_fc = ? where phid = ?", fc3PayplanPcPayStatus, restAmtResult, restAmtFcResult, phid);
+                           // jdbcTemplate.update("UPDATE fc3_payplan_pc set plan_status = ? , rest_amt = ? , rest_amt_fc = ? where phid = ?", fc3PayplanPcPayStatus, restAmtResult, restAmtFcResult, phid);
+                          jdbcTemplate.update("UPDATE fc3_payplan_pc set plan_status = ?  where phid = ?", fc3PayplanPcPayStatus, phid);
                       }
                  }
                  List<CapExDetailRequest> list = capExRequest.getDetail();
@@ -98,7 +99,8 @@ public class CapExServiceImpl implements CapExService {
                                                   BigDecimal rest_amt_fc_big = new BigDecimal(rest_amt_fc);
                                                   rest_amt_big = rest_amt_big.subtract(approveAmtFcDecimal);
                                                   rest_amt_fc_big = rest_amt_fc_big.subtract(approveAmtFcDecimal);
-                                                  jdbcTemplate.update("UPDATE fc3_payplan_pc_dd set rest_amt = ? , rest_amt_fc = ? , realpay_amt = ? , realpay_amt_fc = ? where phid = ?",rest_amt_big, rest_amt_fc_big, approveAmtFcDecimal, approveAmtFcDecimal, phid);
+                                                  //jdbcTemplate.update("UPDATE fc3_payplan_pc_dd set rest_amt = ? , rest_amt_fc = ? , realpay_amt = ? , realpay_amt_fc = ? where phid = ?",rest_amt_big, rest_amt_fc_big, approveAmtFcDecimal, approveAmtFcDecimal, phid);
+                                                  jdbcTemplate.update("UPDATE fc3_payplan_pc_dd set realpay_amt = ? , realpay_amt_fc = ? where phid = ?", approveAmtFcDecimal, approveAmtFcDecimal, phid);
 
                                                   List<Map<String, Object>> fc3PayplanPcD = jdbcTemplate.queryForList(
                                                         "select phid,realpay_amt,realpay_amt_fc,phid_sourceid from fc3_payplan_pc_d where phid='" + phid_det + "'"
@@ -115,7 +117,7 @@ public class CapExServiceImpl implements CapExService {
                            }
 //                       }
                  }
-                 jdbcTemplate.update("UPDATE fc3_pay_bill set pay_status = ?, user_yts = ? where bill_code = ?", 2, 1, capExRequest.getBillNo());
+                 jdbcTemplate.update("UPDATE fc3_pay_bill set pay_status = ?, user_yts = ?, balance_flag = ? where bill_code = ?", 2, 1, 1, capExRequest.getBillNo());
              } else if (capExRequest.getPayStatus() == 2 ) {
                  jdbcTemplate.update("UPDATE fc3_pay_bill set user_yts = ? where bill_code = ?",  6, capExRequest.getBillNo());
              }
@@ -126,7 +128,7 @@ public class CapExServiceImpl implements CapExService {
                 jdbcTemplate.update("UPDATE fc3_otherpay_pc set pay_status = ?, user_yts = ? where bill_code = ?", capExRequest.getPayStatus(), 3, capExRequest.getBillNo());
             } else if (capExRequest.getPayStatus() == 1 ) {
                 //成功 判断明细表金额是否相同 相同状态是1 不相同状态是2
-                jdbcTemplate.update("UPDATE fc3_otherpay_pc set pay_status = ?, user_yts = ? where bill_code = ?", capExRequest.getPayStatus(), 1, capExRequest.getBillNo());
+                jdbcTemplate.update("UPDATE fc3_otherpay_pc set pay_status = ?, user_yts = ?, balance_flag = ? where bill_code = ?", capExRequest.getPayStatus(), 1, 1, capExRequest.getBillNo());
             } else if (capExRequest.getPayStatus() == 2 ) {
                 jdbcTemplate.update("UPDATE fc3_otherpay_pc set user_yts = ? where bill_code = ?", 6, capExRequest.getBillNo());
             }

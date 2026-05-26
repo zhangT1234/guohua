@@ -1,8 +1,10 @@
 package com.newgrand.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.newgrand.domain.dto.BillRequest;
+import com.newgrand.domain.dto.CapExDetailRequest;
 import com.newgrand.domain.dto.OaResult;
 import com.newgrand.domain.model.Fg3Enterprise;
 import com.newgrand.domain.model.I8ReturnModel;
@@ -977,6 +979,87 @@ public class BillServiceImpl implements BillService {
                 }
             }
         }
+
+
+        String fc3PayPaySql = "select * from fc3_pay_bill where user_sftsoa != '是' and ISNULL(user_yts, 0) = 0 and pay_status != 2 and check_flag = 1";
+        List<Map<String, Object>> fc3PayPaySqlData = jdbcTemplate.queryForList(fc3PayPaySql);
+        if (CollectionUtil.isNotEmpty(fc3PayPaySqlData)) {
+            for (Map<String, Object> dataMap : fc3PayPaySqlData) {
+                    String phidSourcemId = dataMap.get("phid_sourcemid") != null ? dataMap.get("phid_sourcemid").toString() : "";
+                    String appproveAmtFc = dataMap.get("appprove_amt_fc") != null ? dataMap.get("appprove_amt_fc").toString() : "0";
+                    String mainPhid = dataMap.get("phid") != null ? dataMap.get("phid").toString() : "";
+                    BigDecimal appproveAmtFcDecimal = new BigDecimal(appproveAmtFc);
+                    List<Map<String, Object>> fc3PayplanPc = jdbcTemplate.queryForList(
+                            "select phid,rest_amt,rest_amt_fc,plan_status from fc3_payplan_pc where phid = '" + phidSourcemId + "'"
+                    );
+                    if (CollectionUtil.isNotEmpty(fc3PayplanPc)) {
+                        for (Map<String, Object> fc3PayplanPcMap : fc3PayplanPc) {
+                            String phid = fc3PayplanPcMap.get("phid") != null ? fc3PayplanPcMap.get("phid").toString() : "";
+                            String restAmt = fc3PayplanPcMap.get("rest_amt") != null ? fc3PayplanPcMap.get("rest_amt").toString() : "0";
+                            String restAmtFc = fc3PayplanPcMap.get("rest_amt_fc") != null ? fc3PayplanPcMap.get("rest_amt_fc").toString() : "0";
+                            BigDecimal restAmtDecimal = new BigDecimal(restAmt);
+                            BigDecimal restAmtFcDecimal = new BigDecimal(restAmtFc);
+                            BigDecimal restAmtResult = restAmtDecimal.subtract(appproveAmtFcDecimal);
+                            BigDecimal restAmtFcResult = restAmtFcDecimal.subtract(appproveAmtFcDecimal);
+                            int fc3PayplanPcPayStatus = 3;
+                            if (restAmtResult.compareTo(BigDecimal.ZERO) > 0) {
+                                fc3PayplanPcPayStatus = 2;
+                            }
+                            // jdbcTemplate.update("UPDATE fc3_payplan_pc set plan_status = ? , rest_amt = ? , rest_amt_fc = ? where phid = ?", fc3PayplanPcPayStatus, restAmtResult, restAmtFcResult, phid);
+                            jdbcTemplate.update("UPDATE fc3_payplan_pc set plan_status = ?  where phid = ?", fc3PayplanPcPayStatus, phid);
+                        }
+                    }
+                        //明细数据
+                        List<Map<String, Object>> fc3PayBillDet = jdbcTemplate.queryForList(
+                                "select phid,phid_mst,phid_proj,ac_code,apply_amt_fc,phid_sourcemid,phid_sourceid,approve_amt_fc FROM fc3_pay_bill_det WHERE phid_mst= '" + mainPhid + "'"
+                        );
+                        if (CollectionUtil.isNotEmpty(fc3PayBillDet)) {
+                            for (Map<String, Object> map : fc3PayBillDet) {
+                                String phidSourceid = map.get("phid_sourceid") != null ? map.get("phid_sourceid").toString() : "";
+                                String approveAmtFc = map.get("approve_amt_fc") != null ? map.get("approve_amt_fc").toString() : "0";
+                                BigDecimal approveAmtFcDecimal = new BigDecimal(approveAmtFc);
+                                List<Map<String, Object>> fc3PayplanPcDd = jdbcTemplate.queryForList(
+                                        "select phid,rest_amt,rest_amt_fc,realpay_amt,realpay_amt_fc,phid_sourceid,phid_det from fc3_payplan_pc_dd where phid='" + phidSourceid + "'"
+                                );
+                                if (CollectionUtil.isNotEmpty(fc3PayplanPcDd)) {
+                                    for (Map<String, Object> fc3PayplanPcDdMap : fc3PayplanPcDd) {
+                                        String rest_amt = fc3PayplanPcDdMap.get("rest_amt") != null ? fc3PayplanPcDdMap.get("rest_amt").toString() : "0";
+                                        String rest_amt_fc = fc3PayplanPcDdMap.get("rest_amt_fc") != null ? fc3PayplanPcDdMap.get("rest_amt_fc").toString() : "0";
+                                        String phid_det = fc3PayplanPcDdMap.get("phid_det") != null ? fc3PayplanPcDdMap.get("phid_det").toString() : "";
+                                        String phid = fc3PayplanPcDdMap.get("phid") != null ? fc3PayplanPcDdMap.get("phid").toString() : "";
+                                        BigDecimal rest_amt_big = new BigDecimal(rest_amt);
+                                        BigDecimal rest_amt_fc_big = new BigDecimal(rest_amt_fc);
+                                        rest_amt_big = rest_amt_big.subtract(approveAmtFcDecimal);
+                                        rest_amt_fc_big = rest_amt_fc_big.subtract(approveAmtFcDecimal);
+                                        //jdbcTemplate.update("UPDATE fc3_payplan_pc_dd set rest_amt = ? , rest_amt_fc = ? , realpay_amt = ? , realpay_amt_fc = ? where phid = ?",rest_amt_big, rest_amt_fc_big, approveAmtFcDecimal, approveAmtFcDecimal, phid);
+                                        jdbcTemplate.update("UPDATE fc3_payplan_pc_dd set realpay_amt = ? , realpay_amt_fc = ? where phid = ?", approveAmtFcDecimal, approveAmtFcDecimal, phid);
+
+                                        List<Map<String, Object>> fc3PayplanPcD = jdbcTemplate.queryForList(
+                                                "select phid,realpay_amt,realpay_amt_fc,phid_sourceid from fc3_payplan_pc_d where phid='" + phid_det + "'"
+                                        );
+                                        if (CollectionUtil.isNotEmpty(fc3PayplanPcD)) {
+                                            for (Map<String, Object> fc3PayplanPcDMap : fc3PayplanPcD) {
+                                                phid = fc3PayplanPcDMap.get("phid") != null ? fc3PayplanPcDMap.get("phid").toString() : "";
+                                                jdbcTemplate.update("UPDATE fc3_payplan_pc_d set realpay_amt = ? , realpay_amt_fc = ? where phid = ?", approveAmtFcDecimal, approveAmtFcDecimal, phid);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    jdbcTemplate.update("UPDATE fc3_pay_bill set pay_status = ?, user_yts = ?, balance_flag = ? where phid = ?", 2, 7, 1, mainPhid);
+            }
+        }
+
+        String otherPaySql = "select * from fc3_otherpay_pc where user_sftsoa != '是' and ISNULL(user_yts, 0) = 0 and pay_status != 1 and check_flag = 1";
+        List<Map<String, Object>> otherPaySqlData = jdbcTemplate.queryForList(otherPaySql);
+        if (CollectionUtil.isNotEmpty(otherPaySqlData)) {
+            for (Map<String, Object> otherPaySqlMap : otherPaySqlData) {
+                jdbcTemplate.update("UPDATE fc3_otherpay_pc set pay_status = ?, user_yts = ?, balance_flag = ? where phid = ?", 1, 7, 1, otherPaySqlMap.get("phid"));
+
+            }
+        }
+
     }
 
 }
