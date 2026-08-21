@@ -24,6 +24,9 @@ import java.io.FileOutputStream;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -117,7 +120,13 @@ public class CapExServiceImpl implements CapExService {
                            }
 //                       }
                  }
-                 jdbcTemplate.update("UPDATE fc3_pay_bill set pay_status = ?, user_yts = ?, balance_flag = ? where bill_code = ?", 2, 1, 1, capExRequest.getBillNo());
+                 if(fc3PayBill.get(0).get("user_sprq") == null) {
+                     String checkDate = fc3PayBill.get(0).get("check_date") != null ? fc3PayBill.get(0).get("check_date").toString() : "";
+                     String nowDateStr = UipLog.getCurrentTime();
+                     jdbcTemplate.update("UPDATE fc3_pay_bill set pay_status = ?, user_yts = ?, balance_flag = ?, user_sprq = ?, check_date = ? where bill_code = ?", 2, 1, 1, checkDate, nowDateStr, capExRequest.getBillNo());
+                 } else {
+                     jdbcTemplate.update("UPDATE fc3_pay_bill set pay_status = ?, user_yts = ?, balance_flag = ? where bill_code = ?", 2, 1, 1, capExRequest.getBillNo());
+                 }
              } else if (capExRequest.getPayStatus() == 2 ) {
                  jdbcTemplate.update("UPDATE fc3_pay_bill set user_yts = ? where bill_code = ?",  6, capExRequest.getBillNo());
              }
@@ -127,8 +136,19 @@ public class CapExServiceImpl implements CapExService {
                 //失败 更新支付状态
                 jdbcTemplate.update("UPDATE fc3_otherpay_pc set pay_status = ?, user_yts = ? where bill_code = ?", capExRequest.getPayStatus(), 3, capExRequest.getBillNo());
             } else if (capExRequest.getPayStatus() == 1 ) {
-                //成功 判断明细表金额是否相同 相同状态是1 不相同状态是2
-                jdbcTemplate.update("UPDATE fc3_otherpay_pc set pay_status = ?, user_yts = ?, balance_flag = ? where bill_code = ?", capExRequest.getPayStatus(), 1, 1, capExRequest.getBillNo());
+                //成功
+                List<Map<String, Object>> fc3OtherpayPcs = jdbcTemplate.queryForList(
+                        "SELECT * FROM fc3_otherpay_pc where bill_code = '" + capExRequest.getBillNo() + "'"
+                );
+                if(CollectionUtil.isNotEmpty(fc3OtherpayPcs)) {
+                    if(fc3OtherpayPcs.get(0).get("user_sprq") == null) {
+                        String checkDate = fc3OtherpayPcs.get(0).get("check_date")!=null ? fc3OtherpayPcs.get(0).get("check_date").toString() : "";
+                        String nowDateStr = UipLog.getCurrentTime();
+                        jdbcTemplate.update("UPDATE fc3_otherpay_pc set pay_status = ?, user_yts = ?, balance_flag = ?, user_sprq = ?, check_date = ? where bill_code = ?", capExRequest.getPayStatus(), 1, 1, checkDate, nowDateStr, capExRequest.getBillNo());
+                    } else {
+                        jdbcTemplate.update("UPDATE fc3_otherpay_pc set pay_status = ?, user_yts = ?, balance_flag = ? where bill_code = ?", capExRequest.getPayStatus(), 1, 1, capExRequest.getBillNo());
+                    }
+                }
             } else if (capExRequest.getPayStatus() == 2 ) {
                 jdbcTemplate.update("UPDATE fc3_otherpay_pc set user_yts = ? where bill_code = ?", 6, capExRequest.getBillNo());
             }

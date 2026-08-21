@@ -179,6 +179,10 @@ public class WorkFlowService {
                             String receiver = receiverInfo.getUserno();
                             String creator = creatorInfo.getUserno();
 
+                            if(!"123".equals(receiver)) {
+                                continue;
+                            }
+
                             root_push.put("syscode", registerCode);//注册系统编码
                             root_push.put("flowid", taskid);//
                             root_push.put("requestname", title);//待办标题

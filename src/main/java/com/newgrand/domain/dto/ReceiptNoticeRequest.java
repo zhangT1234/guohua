@@ -39,4 +39,18 @@ public class ReceiptNoticeRequest {
     @ApiModelProperty(value = "回款日期", required = false)
     private String recDate;
 
+    @ApiModelProperty(value = "备注", required = false)
+    private String  remark;
+
+    @ApiModelProperty(value = "付款方户名", required = false)
+    private String  payAccName;
+
+    @ApiModelProperty(value = "付款方账号", required = false)
+    private String  payAccNo;
+
+    @ApiModelProperty(value = "收款方户名", required = false)
+    private String  recAccName;
+
+    @ApiModelProperty(value = "收款方账号", required = false)
+    private String  recAccNo;
 }

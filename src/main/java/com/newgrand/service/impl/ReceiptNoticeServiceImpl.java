@@ -18,7 +18,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,53 +41,71 @@ public class ReceiptNoticeServiceImpl implements ReceiptNoticeService {
     public I8ReturnModel saveReceiptNotice(ReceiptNoticeRequest data) {
         log.info("到账通知单同步入参: {}", JSONObject.toJSONString(data));
         try {
-                List<NameValuePair> urlParameters = new ArrayList<>();
-                HashMap<String, Object> mapInfo = new HashMap<>();
-                mapInfo.put("BillName", data.getBillName());
-                mapInfo.put("RecFlag", 1);
-                mapInfo.put("RecAmtFc", data.getRecAmtFc());
-                mapInfo.put("RecAmt", data.getRecAmtFc());
-                mapInfo.put("RestRecAmt", data.getRecAmtFc());
-                mapInfo.put("RestRecAmtFc", data.getRecAmtFc());
-                mapInfo.put("TakeAmtFc", data.getTakeAmtFc());
-                mapInfo.put("TakeAmt", data.getTakeAmtFc());
-                mapInfo.put("RestTakeAmt", data.getTakeAmtFc());
-                mapInfo.put("RestTakeAmtFc", data.getTakeAmtFc());
-                if (data.getRecAmtFc() != null && data.getTakeAmtFc() != null) {
-                  String recAmtFc = data.getRecAmtFc();
-                  recAmtFc = recAmtFc.replaceAll(",", "");
-                  String takeAmtFc = data.getTakeAmtFc();
-                  takeAmtFc = takeAmtFc.replaceAll(",", "");
-                  BigDecimal recAmtFcBigDecimal = new BigDecimal(recAmtFc);
-                  BigDecimal takeAmtFcBigDecimal = new BigDecimal(takeAmtFc);
-                  mapInfo.put("ChangeAmtFc", recAmtFcBigDecimal.subtract(takeAmtFcBigDecimal));
-                  mapInfo.put("RestChangeAmt", recAmtFcBigDecimal.subtract(takeAmtFcBigDecimal));
-                  mapInfo.put("RestChangeAmtFc", recAmtFcBigDecimal.subtract(takeAmtFcBigDecimal));
-                  mapInfo.put("ChangeAmt", recAmtFcBigDecimal.subtract(takeAmtFcBigDecimal));
-                }
-                mapInfo.put("user_yh", data.getUserYh());
-                mapInfo.put("PhidPayEnt", "");
-                mapInfo.put("user_fkdw", data.getUserOfsid());
-                if (data.getRecDate() != null) {
-                    mapInfo.put("RecDate", data.getRecDate());
-                } else {
-                    mapInfo.put("RecDate", LocalDate.now().toString());
-                }
-                String mstFormData = I8Converter.SetField(mstformDataStr, mapInfo);
-                urlParameters.add(new BasicNameValuePair("receiptnoticeformData", mstFormData));
-                urlParameters.add(new BasicNameValuePair("pointid", ""));
-                urlParameters.add(new BasicNameValuePair("type", "0"));
-                urlParameters.add(new BasicNameValuePair("ng3_logid", "315211026000006"));
-                log.info("到账通知单调用的param:{}", JSONObject.toJSONString(urlParameters));
-                I8ReturnModel i8ReturnModel = i8Request.PostFormSync("/FC/EFM/ReceiptNotice/save", urlParameters);
-                log.info(data.getBillName() + "---到账通知单同步结果: {}", JSONObject.toJSONString(i8ReturnModel));
-                if (!i8ReturnModel.getIsOk()) {
-                    return i8ReturnModel;
-                }
-                return I8ResultUtil.success("到账通知单" + data.getBillName() + "新增成功");
-            } catch (Exception e) {
-               return I8ResultUtil.error(e.getMessage());
+            List<NameValuePair> urlParameters = new ArrayList<>();
+            HashMap<String, Object> mapInfo = new HashMap<>();
+            mapInfo.put("BillName", data.getBillName());
+            mapInfo.put("RecFlag", 1);
+            mapInfo.put("RecAmtFc", data.getRecAmtFc());
+            mapInfo.put("RecAmt", data.getRecAmtFc());
+            mapInfo.put("RestRecAmt", data.getRecAmtFc());
+            mapInfo.put("RestRecAmtFc", data.getRecAmtFc());
+            mapInfo.put("TakeAmtFc", data.getTakeAmtFc());
+            mapInfo.put("TakeAmt", data.getTakeAmtFc());
+            mapInfo.put("RestTakeAmt", data.getTakeAmtFc());
+            mapInfo.put("RestTakeAmtFc", data.getTakeAmtFc());
+            if (data.getRecAmtFc() != null && data.getTakeAmtFc() != null) {
+              String recAmtFc = data.getRecAmtFc();
+              recAmtFc = recAmtFc.replaceAll(",", "");
+              String takeAmtFc = data.getTakeAmtFc();
+              takeAmtFc = takeAmtFc.replaceAll(",", "");
+              BigDecimal recAmtFcBigDecimal = new BigDecimal(recAmtFc);
+              BigDecimal takeAmtFcBigDecimal = new BigDecimal(takeAmtFc);
+              mapInfo.put("ChangeAmtFc", recAmtFcBigDecimal.subtract(takeAmtFcBigDecimal));
+              mapInfo.put("RestChangeAmt", recAmtFcBigDecimal.subtract(takeAmtFcBigDecimal));
+              mapInfo.put("RestChangeAmtFc", recAmtFcBigDecimal.subtract(takeAmtFcBigDecimal));
+              mapInfo.put("ChangeAmt", recAmtFcBigDecimal.subtract(takeAmtFcBigDecimal));
             }
+            mapInfo.put("user_yh", data.getUserYh());
+            mapInfo.put("PhidPayEnt", "");
+            mapInfo.put("user_fkdw", data.getUserOfsid());
+            if (data.getRecDate() != null) {
+                mapInfo.put("RecDate", data.getRecDate());
+            } else {
+                mapInfo.put("RecDate", LocalDate.now().toString());
+            }
+            if(data.getRemark() != null) {
+                mapInfo.put("Remark", data.getRemark());
+            }
+            if(data.getPayAccName() != null) {
+                mapInfo.put("PayAccName", data.getPayAccName());
+            }
+            if(data.getPayAccNo() != null) {
+                mapInfo.put("PayAccNo", data.getPayAccNo());
+            }
+            if(data.getRecAccName() != null) {
+                mapInfo.put("RecAccName", data.getRecAccName());
+            }
+            if(data.getRecAccNo() != null) {
+                mapInfo.put("RecAccNo", data.getRecAccNo());
+            }
+            String nowDateStr = UipLog.getCurrentTime();
+            mapInfo.put("RecDate", nowDateStr);
+            mapInfo.put("InputDate", nowDateStr);
+            String mstFormData = I8Converter.SetField(mstformDataStr, mapInfo);
+            urlParameters.add(new BasicNameValuePair("receiptnoticeformData", mstFormData));
+            urlParameters.add(new BasicNameValuePair("pointid", ""));
+            urlParameters.add(new BasicNameValuePair("type", "0"));
+            urlParameters.add(new BasicNameValuePair("ng3_logid", "315211026000006"));
+            log.info("到账通知单调用的param:{}", JSONObject.toJSONString(urlParameters));
+            I8ReturnModel i8ReturnModel = i8Request.PostFormSync("/FC/EFM/ReceiptNotice/save", urlParameters);
+            log.info(data.getBillName() + "---到账通知单同步结果: {}", JSONObject.toJSONString(i8ReturnModel));
+            if (!i8ReturnModel.getIsOk()) {
+                return i8ReturnModel;
+            }
+            return I8ResultUtil.success("到账通知单" + data.getBillName() + "新增成功");
+        } catch (Exception e) {
+           return I8ResultUtil.error(e.getMessage());
+        }
     }
 
 }

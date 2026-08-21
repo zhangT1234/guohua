@@ -416,7 +416,7 @@ public class AttachmentImpl implements AttachmentService {
      */
     @Override
     public boolean upLoadFile(I8FileModel i8FileModel) {
-        SoapClient soapClient = SoapClient.create("http://61.175.201.70:8889/filesrv/UploadFileService.asmx?wsdl")
+        SoapClient soapClient = SoapClient.create("http://10.0.20.13:8889/filesrv/UploadFileService.asmx?wsdl")
                 .setCharset(CharsetUtil.CHARSET_UTF_8)
                 // 设置调用方法名称以及命名空间
                 .setMethod("SaveData", "http://tempuri.org/")
@@ -436,10 +436,11 @@ public class AttachmentImpl implements AttachmentService {
                 .setReadTimeout(15000)
                 .timeout(15000);
 
-
+        log.info("附件保存start");
         try {
             // 调用webservice接口
             String result = soapClient.send();
+            log.info("附件保存后：" + result);
 //            Document document = DocumentHelper.parseText(result);
 //            //指向根节点
 //            Element root2 = document.getRootElement();
@@ -449,6 +450,8 @@ public class AttachmentImpl implements AttachmentService {
 //            }
              if (result!=null && result.contains("<SaveDataResult>1</SaveDataResult>")) {
                  return true;
+             } else {
+                 log.info("附件上传返回值：" + result);
              }
 
         }catch (Exception e){
