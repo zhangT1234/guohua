@@ -1,8 +1,8 @@
 server:
   servlet:
-    context-path: /guohua
+    context-path: /yuanzang
     # 端口号
-  port: 18080
+  port: 8030
 
 #数据源
 spring:
@@ -56,8 +56,6 @@ i8:
   #单点登录串
   ssoUrl: http://localhost
   ocode:
-  databaseName: "NG0002"
-  appurl:
 
 #http 请求相关
 http:

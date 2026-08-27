@@ -6,7 +6,7 @@
     <!-- 文件输出格式 -->
     <property name="PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
     <!-- 输出文件路径 -->
-    <property name="OPEN_FILE_PATH" value="D:\\guohua\\logs"/>
+    <property name="OPEN_FILE_PATH" value="/opt/logs"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>

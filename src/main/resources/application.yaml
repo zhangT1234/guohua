@@ -55,10 +55,10 @@ spring:
 
 server:
   # 服务器的HTTP端口，默认为80
-  port: 18080
+  port: 8030
   servlet:
     # 应用的访问路径
-    context-path: /guohua
+    context-path: /yuanzang
   #tomcat
   tomcat:
     # Maximum number of connections that the server accepts and processes at any given time.\

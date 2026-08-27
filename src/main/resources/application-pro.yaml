@@ -1,8 +1,8 @@
 server:
   servlet:
-    context-path: /guohua
+    context-path: /yuanzang
     # 端口号
-  port: 18080
+  port: 8030
 
 #数据源
 spring:
@@ -17,15 +17,23 @@ spring:
         max-wait: 60000
       datasource:
         master:
-          driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-          url: jdbc:sqlserver://10.0.20.14:1433;DatabaseName=NG0001;encrypt=true;trustServerCertificate=true
-          username: sa
-          password: Asd@123
+          driver-class-name: dm.jdbc.driver.DmDriver
+          url: jdbc:dm://10.167.117.1:5236?schema=NG0001
+          username: SYSDBA
+          password: Hn@dameng123
+#          driver-class-name: com.mysql.cj.jdbc.Driver
+#          url: jdbc:mysql://localhost:3306/warm
+#          username: root
+#          password: xinyi1234!
         one:
-          driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-          url: jdbc:sqlserver://10.0.20.14:1433;DatabaseName=NG0001;encrypt=true;trustServerCertificate=true
-          username: sa
-          password: Asd@123
+          driver-class-name: dm.jdbc.driver.DmDriver
+          url: jdbc:dm://10.167.117.1:5236?schema=NG0001
+          username: SYSDBA
+          password: Hn@dameng123
+#          driver-class-name: com.mysql.cj.jdbc.Driver
+#          url: jdbc:mysql://localhost:3306/warm
+#          username: root
+#          password: xinyi1234!
 
   #swagger3.0 兼容问题
   mvc:
@@ -53,8 +61,8 @@ i8:
   #单点登录串
   ssoUrl: http://localhost
   ocode:
-  databaseName: "NG0001"
-  appurl: http://appserver.netcall.cc/EnterpriseInfoService/wechat/pages/seeyon.html?platform=h5&NGCorpId=760794
+  databaseName: "0001"
+  appurl: https://gdyz.gd.gov.cn/EnterpriseInfoService/wechat/pages/h5/React/?platform=h5&enterpriseNo=760833
 
 #http 请求相关
 http:

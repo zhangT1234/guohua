@@ -22,9 +22,10 @@
             <artifactId>hutool-all</artifactId>
             <version>5.8.11</version>
         </dependency>
+        <!-- 仅需 JdbcTemplate；data-jdbc 会为达梦解析 Dialect 失败导致无法启动 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jdbc</artifactId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -158,6 +159,11 @@
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <version>8.0.33</version>
+        </dependency>
+        <dependency>
+            <groupId>com.dameng</groupId>
+            <artifactId>DmJdbcDriver18</artifactId>
+            <version>8.1.3.140</version>
         </dependency>
     </dependencies>
 
