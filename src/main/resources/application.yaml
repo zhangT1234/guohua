@@ -84,6 +84,10 @@ server:
 #时区（上海）
 TZ: Asia/Shanghai
 
+# 微信服务号消息推送 Token（需与公众平台服务器配置一致）
+wechat:
+  token: yuanzang
+
 #mybatis-plus
 mybatis-plus:
   #mapper 路径

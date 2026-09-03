@@ -48,7 +48,7 @@ public class WorkFlowService {
     public static final String OFFICIAL_APPID = "wx35c484c5d6161b6d";
     public static final String OFFICIAL_SECRET = "b340f0e5991dbcd2bd72bc489c67ba54";
     public static final String OFFICIAL_GRANT_TYPE = "client_credential";
-    private static final String ACCESS_TOKEN_KEY = "accessToken";
+    public static final String ACCESS_TOKEN_KEY = "accessToken";
     private static final String TEMPLATE_ID = "8qei9c1-onqk4REhVIeATldDdRqE_KlRU_p2wbqgnJo";
     public static final String GRANT_TYPE = "authorization_code";
 
@@ -85,13 +85,13 @@ public class WorkFlowService {
                     //新增待办
                     List<Map<String, Object>> wfInfo = jdbcTemplate.queryForList(
                             "SELECT p.id_ insid,t.NAME_ as nodename,t.START_TIME_ receivedatetime,p.START_TIME_ createdatetime," +
-                                    "u1.phid as creatorphid,u1.userno startuserno,pd.NAME_ pdname,p.BUSINESS_KEY_ keyname,anbi.bizname as workflowname" +
-                                    "FROM ACT_HI_TASKINST t" +
-                                    "JOIN ACT_HI_PROCINST p ON t.PROC_INST_ID_ =p.ID_" +
+                                    "u1.phid as creatorphid,u1.userno startuserno,pd.NAME_ pdname,p.BUSINESS_KEY_ keyname,anbi.bizname as workflowname " +
+                                    "FROM ACT_HI_TASKINST t " +
+                                    "JOIN ACT_HI_PROCINST p ON t.PROC_INST_ID_ =p.ID_ " +
                                     "JOIN fg3_user u1 ON u1.phid =p.START_USER_ID_ " +
-                                    "JOIN ACT_RE_PROCDEF pd ON pd.ID_ =p.PROC_DEF_ID_" +
-                                    "Join ACT_NG_BIZCOMPONENT anbcp on anbcp.componentid=t.form_resource_key_" +
-                                    "Join act_ng_bizinfo anbi on anbi.Bizid=anbcp.bizid" +
+                                    "JOIN ACT_RE_PROCDEF pd ON pd.ID_ =p.PROC_DEF_ID_ " +
+                                    "Join ACT_NG_BIZCOMPONENT anbcp on anbcp.componentid=t.form_resource_key_ " +
+                                    "Join act_ng_bizinfo anbi on anbi.Bizid=anbcp.bizid " +
                                     "WHERE t.ID_=?", taskid);
                     if (wfInfo != null && wfInfo.size() > 0) {
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.SSS][.SS][.S]");
@@ -140,7 +140,7 @@ public class WorkFlowService {
                             bodyJSON.put("template_id", TEMPLATE_ID);
                             dataJSON.put("thing15", JSONObject.parseObject("{\"value\":\"" + title + "\",\"color\":\"#173177\"}"));
                             dataJSON.put("thing23", JSONObject.parseObject("{\"value\":\"" + username + "\",\"color\":\"#173177\"}"));
-                            dataJSON.put("thing32", JSONObject.parseObject("{\"value\":\"" + createdatetime + "\",\"color\":\"#173177\"}"));
+                            dataJSON.put("time32", JSONObject.parseObject("{\"value\":\"" + createdatetime + "\",\"color\":\"#173177\"}"));
                             bodyJSON.put("url", url);
                             bodyJSON.put("data", dataJSON);
                             sendMsg(bodyJSON);
@@ -202,7 +202,7 @@ public class WorkFlowService {
 
     public synchronized String getToken() {
         CacheInfo cached = CacheUtil.get(ACCESS_TOKEN_KEY);
-        if (cached != null && cached.getInfo() != null) {
+        if (cached != null && StringUtils.isNotEmpty(cached.getInfo())) {
             return cached.getInfo();
         }
         Map<String, String> headers = new HashMap<String, String>();
@@ -214,15 +214,22 @@ public class WorkFlowService {
             HttpResponse response = HttpUtils.doGet(WECHAT_HOST, "/cgi-bin/token", headers, querys);
             String resultStr = EntityUtils.toString(response.getEntity());
             JSONObject resultJSON = JSONObject.parseObject(resultStr);
-            if(resultJSON.containsKey("access_token")) {
+            if (resultJSON != null && resultJSON.containsKey("access_token")) {
                 String accessToken = resultJSON.getString("access_token");
+                // 微信 token 有效期 7200 秒，提前 5 分钟过期避免临界失效
+                int expiresIn = resultJSON.getIntValue("expires_in");
+                if (expiresIn <= 0) {
+                    expiresIn = 7200;
+                }
                 CacheInfo cacheInfo = new CacheInfo();
                 cacheInfo.setInfo(accessToken);
+                cacheInfo.setValidTime(System.currentTimeMillis() + (expiresIn - 300) * 1000L);
                 CacheUtil.put(ACCESS_TOKEN_KEY, cacheInfo);
                 return accessToken;
             }
+            log.error("获取微信 access_token 失败: {}", resultStr);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("获取微信 access_token 异常", e);
         }
         return null;
     }
