@@ -19,7 +19,7 @@
     <appender name="info" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <FileNamePattern>${OPEN_FILE_PATH}/info/guohua.%d{yyyy-MM-dd}-%i.log</FileNamePattern>
-            <MaxHistory>30</MaxHistory>
+            <MaxHistory>365</MaxHistory>
             <TimeBasedFileNamingAndTriggeringPolicy
                     class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <MaxFileSize>50MB</MaxFileSize>
@@ -41,7 +41,7 @@
     <appender name="error" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <FileNamePattern>${OPEN_FILE_PATH}/error/guohua.%d{yyyy-MM-dd}-%i.log</FileNamePattern>
-            <MaxHistory>30</MaxHistory>
+            <MaxHistory>365</MaxHistory>
             <TimeBasedFileNamingAndTriggeringPolicy
                     class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <MaxFileSize>50MB</MaxFileSize>
